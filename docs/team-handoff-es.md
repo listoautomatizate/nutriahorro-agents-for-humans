@@ -3,7 +3,7 @@
 ## Lia: experiencia, automatizacion y demostracion
 
 - Validar el texto y la personalidad de nutrIAhorro.
-- Importar y probar los dos flujos de n8n.
+- Importar y probar los tres flujos de n8n.
 - Configurar YCloud dentro de n8n sin compartir la clave.
 - Confirmar el numero emisor y el numero de prueba.
 - Sustituir precios ficticios por capturas o catalogos vigentes cuando esten disponibles.

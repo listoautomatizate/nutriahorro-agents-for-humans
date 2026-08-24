@@ -6,7 +6,7 @@
 - Memoria persistente de perfil, despensa, recetas y ofertas.
 - Agente Strands con seis herramientas de dominio.
 - Integracion opcional con Amazon Bedrock Nova Lite.
-- Dos flujos importables de n8n para WhatsApp mediante YCloud.
+- Tres flujos importables de n8n para WhatsApp mediante YCloud.
 - Imagen de portada, licencia MIT, arquitectura y guion de video.
 - Pruebas automatizadas de herramientas y compilacion web.
 
@@ -19,7 +19,7 @@
 - Confirmar los telefonos de emision y prueba.
 - Crear un repositorio GitHub publico con este contenido.
 - Invitar al hermano al equipo de Devpost.
-- Grabar y subir el video publico o no listado, maximo 5 minutos.
+- Grabar y subir el video publico a YouTube o Vimeo, maximo 5 minutos.
 - Publicar la entrega antes del 14 de septiembre de 2026 a las 17:00 PDT.
 
 ## Material que debe adjuntarse

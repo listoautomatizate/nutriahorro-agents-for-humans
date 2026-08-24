@@ -85,6 +85,7 @@ python agent/test_tools.py
 
 ## Entrega
 
+- [Guia maestra de entrega](docs/ENTREGA-COMPLETA-ES.md)
 - [Guia de presentacion](docs/submission-checklist-es.md)
 - [Guion de demostracion](docs/demo-script-es.md)
 - [Texto para Devpost](docs/devpost-submission.md)
