@@ -11,6 +11,7 @@ Proyecto creado para **Agents for Humans Hackathon**, categoria **Everyday Agent
 El repositorio ya trae un caso reproducible situado en Maldonado, Uruguay:
 
 - Perfil general de bienestar de Lia: 177 cm, 66 kg, objetivo 60 kg.
+- Pantalla de objetivos editable con meta, movilidad, ejercicio, tiempo para cocinar y preferencias.
 - Rango orientativo de 1500 a 1600 kcal y macros cargados por la usuaria.
 - Compra ficticia en Ta-Ta: pollo, arroz, 12 huevos, tres paltas, tomate y aceite de oliva.
 - Cinco recetas, control de stock y vencimientos, descuento de ingredientes al cocinar.
@@ -23,7 +24,7 @@ Los precios son datos ficticios de demostracion, no ofertas vigentes. Las sugere
 ## Arquitectura
 
 - **Producto web:** React 19, vinext y Cloudflare Workers.
-- **Memoria:** D1 para perfil, despensa, recetas, ofertas y acciones realizadas.
+- **Memoria:** D1 para objetivos, perfil, despensa, recetas, ofertas y acciones realizadas.
 - **Archivos:** R2 para tickets de compra.
 - **Agente:** Strands Agents SDK con Amazon Bedrock y herramientas de dominio propias.
 - **Mensajeria:** n8n + YCloud para WhatsApp Business.

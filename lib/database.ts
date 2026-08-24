@@ -18,6 +18,20 @@ const statements = [
     transport_mode TEXT NOT NULL,
     updated_at TEXT NOT NULL
   )`,
+  `CREATE TABLE IF NOT EXISTS profile_goals (
+    profile_id TEXT PRIMARY KEY,
+    age INTEGER NOT NULL,
+    metabolic_reference TEXT NOT NULL,
+    goal_type TEXT NOT NULL,
+    activity_level TEXT NOT NULL,
+    exercise_days_per_week INTEGER NOT NULL,
+    exercise_minutes INTEGER NOT NULL,
+    meal_prep_minutes INTEGER NOT NULL,
+    dietary_preference TEXT NOT NULL,
+    allergies TEXT NOT NULL,
+    dislikes TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+  )`,
   `CREATE TABLE IF NOT EXISTS pantry_items (
     id TEXT PRIMARY KEY,
     profile_id TEXT NOT NULL,
@@ -72,13 +86,23 @@ const statements = [
   'CREATE INDEX IF NOT EXISTS idx_history_profile_date ON meal_history(profile_id, cooked_at)',
 ];
 
-const rowToProfile = (row: Record<string, unknown>): Profile => ({
+const rowToProfile = (row: Record<string, unknown>, goals?: Record<string, unknown> | null): Profile => ({
   id: String(row.id),
   name: String(row.name),
   city: String(row.city),
+  age: Number(goals?.age ?? demoProfile.age),
+  metabolicReference: (goals?.metabolic_reference ?? demoProfile.metabolicReference) as Profile['metabolicReference'],
   heightCm: Number(row.height_cm),
   currentWeightKg: Number(row.current_weight_kg),
   goalWeightKg: Number(row.goal_weight_kg),
+  goalType: (goals?.goal_type ?? demoProfile.goalType) as Profile['goalType'],
+  activityLevel: (goals?.activity_level ?? demoProfile.activityLevel) as Profile['activityLevel'],
+  exerciseDaysPerWeek: Number(goals?.exercise_days_per_week ?? demoProfile.exerciseDaysPerWeek),
+  exerciseMinutes: Number(goals?.exercise_minutes ?? demoProfile.exerciseMinutes),
+  mealPrepMinutes: Number(goals?.meal_prep_minutes ?? demoProfile.mealPrepMinutes),
+  dietaryPreference: String(goals?.dietary_preference ?? demoProfile.dietaryPreference),
+  allergies: String(goals?.allergies ?? demoProfile.allergies),
+  dislikes: String(goals?.dislikes ?? demoProfile.dislikes),
   calorieMin: Number(row.calorie_min),
   calorieMax: Number(row.calorie_max),
   proteinGrams: Number(row.protein_grams),
@@ -129,9 +153,21 @@ export async function ensureDatabase() {
   await db.batch(statements.map((sql) => db.prepare(sql)));
 
   const existing = await db.prepare('SELECT id FROM profiles WHERE id = ?').bind(demoProfile.id).first();
-  if (existing) return;
-
   const now = new Date().toISOString();
+  if (existing) {
+    await db.prepare(`INSERT OR IGNORE INTO profile_goals (
+      profile_id, age, metabolic_reference, goal_type, activity_level,
+      exercise_days_per_week, exercise_minutes, meal_prep_minutes,
+      dietary_preference, allergies, dislikes, updated_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).bind(
+      demoProfile.id, demoProfile.age, demoProfile.metabolicReference, demoProfile.goalType,
+      demoProfile.activityLevel, demoProfile.exerciseDaysPerWeek, demoProfile.exerciseMinutes,
+      demoProfile.mealPrepMinutes, demoProfile.dietaryPreference, demoProfile.allergies,
+      demoProfile.dislikes, now,
+    ).run();
+    return;
+  }
+
   const seed = [
     db.prepare(`INSERT INTO profiles (
       id, name, city, height_cm, current_weight_kg, goal_weight_kg,
@@ -139,6 +175,12 @@ export async function ensureDatabase() {
       transport_mode, updated_at
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
       .bind(demoProfile.id, demoProfile.name, demoProfile.city, demoProfile.heightCm, demoProfile.currentWeightKg, demoProfile.goalWeightKg, demoProfile.calorieMin, demoProfile.calorieMax, demoProfile.proteinGrams, demoProfile.carbsGrams, demoProfile.fatGrams, demoProfile.transportMode, now),
+    db.prepare(`INSERT INTO profile_goals (
+      profile_id, age, metabolic_reference, goal_type, activity_level,
+      exercise_days_per_week, exercise_minutes, meal_prep_minutes,
+      dietary_preference, allergies, dislikes, updated_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
+      .bind(demoProfile.id, demoProfile.age, demoProfile.metabolicReference, demoProfile.goalType, demoProfile.activityLevel, demoProfile.exerciseDaysPerWeek, demoProfile.exerciseMinutes, demoProfile.mealPrepMinutes, demoProfile.dietaryPreference, demoProfile.allergies, demoProfile.dislikes, now),
     ...demoPantry.map((item) => db.prepare(`INSERT INTO pantry_items (
       id, profile_id, name, category, quantity, unit, purchased_at, best_before, source, status
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
@@ -160,8 +202,9 @@ export async function ensureDatabase() {
 export async function getAppState(): Promise<AppState> {
   await ensureDatabase();
   const db = env.DB;
-  const [profileRow, pantryRows, recipeRows, offerRows, historyRows, uploadRow] = await Promise.all([
+  const [profileRow, goalRow, pantryRows, recipeRows, offerRows, historyRows, uploadRow] = await Promise.all([
     db.prepare('SELECT * FROM profiles WHERE id = ?').bind(demoProfile.id).first<Record<string, unknown>>(),
+    db.prepare('SELECT * FROM profile_goals WHERE profile_id = ?').bind(demoProfile.id).first<Record<string, unknown>>(),
     db.prepare('SELECT * FROM pantry_items WHERE profile_id = ? ORDER BY best_before ASC').bind(demoProfile.id).all<Record<string, unknown>>(),
     db.prepare('SELECT * FROM recipes ORDER BY prep_minutes ASC').all<Record<string, unknown>>(),
     db.prepare('SELECT * FROM offers ORDER BY supermarket, product').all<Record<string, unknown>>(),
@@ -172,7 +215,7 @@ export async function getAppState(): Promise<AppState> {
   if (!profileRow) throw new Error('No se pudo cargar el perfil de demostracion.');
 
   return {
-    profile: rowToProfile(profileRow),
+    profile: rowToProfile(profileRow, goalRow),
     pantry: pantryRows.results.map(rowToPantry),
     recipes: recipeRows.results.map(rowToRecipe),
     offers: offerRows.results.map(rowToOffer),
@@ -209,6 +252,36 @@ export async function updateTransport(mode: Profile['transportMode']) {
   await env.DB.prepare('UPDATE profiles SET transport_mode = ?, updated_at = ? WHERE id = ?')
     .bind(mode, new Date().toISOString(), demoProfile.id)
     .run();
+}
+
+export async function updateProfile(profile: Profile) {
+  await ensureDatabase();
+  const now = new Date().toISOString();
+  await env.DB.batch([
+    env.DB.prepare(`UPDATE profiles SET
+      name = ?, city = ?, height_cm = ?, current_weight_kg = ?, goal_weight_kg = ?,
+      calorie_min = ?, calorie_max = ?, protein_grams = ?, carbs_grams = ?, fat_grams = ?,
+      updated_at = ? WHERE id = ?`)
+      .bind(profile.name, profile.city, profile.heightCm, profile.currentWeightKg, profile.goalWeightKg, profile.calorieMin, profile.calorieMax, profile.proteinGrams, profile.carbsGrams, profile.fatGrams, now, demoProfile.id),
+    env.DB.prepare(`INSERT INTO profile_goals (
+      profile_id, age, metabolic_reference, goal_type, activity_level,
+      exercise_days_per_week, exercise_minutes, meal_prep_minutes,
+      dietary_preference, allergies, dislikes, updated_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ON CONFLICT(profile_id) DO UPDATE SET
+      age = excluded.age,
+      metabolic_reference = excluded.metabolic_reference,
+      goal_type = excluded.goal_type,
+      activity_level = excluded.activity_level,
+      exercise_days_per_week = excluded.exercise_days_per_week,
+      exercise_minutes = excluded.exercise_minutes,
+      meal_prep_minutes = excluded.meal_prep_minutes,
+      dietary_preference = excluded.dietary_preference,
+      allergies = excluded.allergies,
+      dislikes = excluded.dislikes,
+      updated_at = excluded.updated_at`)
+      .bind(demoProfile.id, profile.age, profile.metabolicReference, profile.goalType, profile.activityLevel, profile.exerciseDaysPerWeek, profile.exerciseMinutes, profile.mealPrepMinutes, profile.dietaryPreference, profile.allergies, profile.dislikes, now),
+  ]);
 }
 
 export async function cookRecipe(recipeId: string) {

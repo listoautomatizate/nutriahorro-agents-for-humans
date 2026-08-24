@@ -1,12 +1,25 @@
 export type TransportMode = 'walking' | 'bicycle' | 'car' | 'motorcycle';
+export type GoalType = 'lose_fat' | 'maintain' | 'gain_muscle' | 'improve_fitness';
+export type ActivityLevel = 'sedentary' | 'light' | 'moderate' | 'high';
+export type MetabolicReference = 'female' | 'male' | 'neutral';
 
 export type Profile = {
   id: string;
   name: string;
   city: string;
+  age: number;
+  metabolicReference: MetabolicReference;
   heightCm: number;
   currentWeightKg: number;
   goalWeightKg: number;
+  goalType: GoalType;
+  activityLevel: ActivityLevel;
+  exerciseDaysPerWeek: number;
+  exerciseMinutes: number;
+  mealPrepMinutes: number;
+  dietaryPreference: string;
+  allergies: string;
+  dislikes: string;
   calorieMin: number;
   calorieMax: number;
   proteinGrams: number;

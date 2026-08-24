@@ -1,6 +1,7 @@
 'use client';
 
 import {
+  Activity,
   AlertTriangle,
   Bike,
   Camera,
@@ -8,7 +9,6 @@ import {
   Check,
   ChefHat,
   ChevronRight,
-  CircleUserRound,
   Clock3,
   Copy,
   Droplets,
@@ -21,11 +21,13 @@ import {
   MessageCircleMore,
   PackageSearch,
   Plus,
+  Scale,
   ScanLine,
   Search,
   Send,
   ShoppingBasket,
   Sparkles,
+  Target,
   Trash2,
   Utensils,
   Wheat,
@@ -33,13 +35,15 @@ import {
 } from 'lucide-react';
 import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { demoOffers, demoPantry, demoProfile, demoRecipes, transportConfig } from '@/lib/demo-data';
-import type { AppState, PantryItem, Recipe, ShoppingOption, TransportMode } from '@/lib/types';
+import { calculateNutritionTargets } from '@/lib/nutrition';
+import type { AppState, GoalType, PantryItem, Profile, Recipe, ShoppingOption, TransportMode } from '@/lib/types';
 
-type ViewName = 'Hoy' | 'Despensa' | 'Recetas' | 'Compra';
-type ModalName = 'add' | 'receipt' | 'recipe' | 'summary' | 'profile' | null;
+type ViewName = 'Hoy' | 'Objetivos' | 'Despensa' | 'Recetas' | 'Compra';
+type ModalName = 'add' | 'receipt' | 'recipe' | 'summary' | null;
 
 const navItems: Array<{ label: ViewName; icon: typeof Home }> = [
   { label: 'Hoy', icon: Home },
+  { label: 'Objetivos', icon: Target },
   { label: 'Despensa', icon: PackageSearch },
   { label: 'Recetas', icon: ChefHat },
   { label: 'Compra', icon: ShoppingBasket },
@@ -195,7 +199,7 @@ export default function NutriahorroApp() {
 
   return (
     <div className="app-shell">
-      <Sidebar active={active} navigate={navigate} showSummary={showSummary} showProfile={() => setModal('profile')} />
+      <Sidebar active={active} navigate={navigate} showSummary={showSummary} profile={state.profile} showProfile={() => navigate('Objetivos')} />
 
       <main className="main-area">
         <Header
@@ -217,6 +221,7 @@ export default function NutriahorroApp() {
             openReceipt={() => setModal('receipt')}
           />
         )}
+        {active === 'Objetivos' && <GoalsView state={state} setState={setState} notify={setToast} />}
         {active === 'Despensa' && (
           <PantryView
             state={state}
@@ -242,14 +247,13 @@ export default function NutriahorroApp() {
       {modal === 'receipt' && <ReceiptModal close={() => setModal(null)} setState={setState} notify={setToast} />}
       {modal === 'recipe' && selectedRecipe && <RecipeModal recipe={selectedRecipe} close={() => setModal(null)} cook={cook} busy={busy} />}
       {modal === 'summary' && <SummaryModal summary={summary} close={() => setModal(null)} notify={setToast} />}
-      {modal === 'profile' && <ProfileModal state={state} close={() => setModal(null)} />}
       {chatOpen && <ChatDrawer messages={chatMessages} input={chatInput} setInput={setChatInput} send={sendChat} close={() => setChatOpen(false)} busy={busy} />}
       {toast && <div className="toast" role="status"><Check size={17} />{toast}</div>}
     </div>
   );
 }
 
-function Sidebar({ active, navigate, showSummary, showProfile }: { active: ViewName; navigate: (view: ViewName) => void; showSummary: () => void; showProfile: () => void }) {
+function Sidebar({ active, navigate, showSummary, showProfile, profile }: { active: ViewName; navigate: (view: ViewName) => void; showSummary: () => void; showProfile: () => void; profile: Profile }) {
   return (
     <aside className="sidebar">
       <div className="brand" aria-label="nutrIAhorro">
@@ -268,7 +272,7 @@ function Sidebar({ active, navigate, showSummary, showProfile }: { active: ViewN
         <button onClick={showSummary} type="button">Ver resumen</button>
       </div>
       <button className="profile-button" onClick={showProfile} type="button">
-        <span className="avatar">L</span><span><strong>Lia</strong><small>Maldonado</small></span><ChevronRight size={17} />
+        <span className="avatar">{profile.name.slice(0, 1).toUpperCase()}</span><span><strong>{profile.name}</strong><small>{profile.city}</small></span><ChevronRight size={17} />
       </button>
     </aside>
   );
@@ -277,6 +281,7 @@ function Sidebar({ active, navigate, showSummary, showProfile }: { active: ViewN
 function Header({ active, profileName, syncStatus, addItem, openReceipt }: { active: ViewName; profileName: string; syncStatus: string; addItem: () => void; openReceipt: () => void }) {
   const titles: Record<ViewName, string> = {
     Hoy: `Hola, ${profileName}. Esto es lo importante hoy.`,
+    Objetivos: 'Tus objetivos definen el plan diario.',
     Despensa: 'Tu despensa, ordenada y al dia.',
     Recetas: 'Comidas pensadas con lo que ya tenes.',
     Compra: 'Compara el costo real antes de salir.',
@@ -329,6 +334,91 @@ function MacroGrid({ state }: { state: AppState }) {
     { icon: Droplets, value: `${state.profile.fatGrams} g`, label: 'grasas', kind: 'fat' },
   ];
   return <div className="macro-grid">{values.map((item) => { const Icon = item.icon; return <div className="macro-item" key={item.label}><span className={`macro-icon ${item.kind}`}><Icon size={18} /></span><span><strong>{item.value}</strong><small>{item.label}</small></span></div>; })}</div>;
+}
+
+function GoalsView({ state, setState, notify }: { state: AppState; setState: (state: AppState) => void; notify: (text: string) => void }) {
+  const [draft, setDraft] = useState<Profile>(state.profile);
+  const [saving, setSaving] = useState(false);
+  const targets = useMemo(() => calculateNutritionTargets(draft), [draft]);
+  const goalChoices: Array<{ value: GoalType; label: string; detail: string }> = [
+    { value: 'lose_fat', label: 'Perder grasa', detail: 'Deficit moderado' },
+    { value: 'maintain', label: 'Mantenerme', detail: 'Peso estable' },
+    { value: 'gain_muscle', label: 'Ganar masa', detail: 'Superavit moderado' },
+    { value: 'improve_fitness', label: 'Estar en forma', detail: 'Rendimiento general' },
+  ];
+  const update = <Key extends keyof Profile>(key: Key, value: Profile[Key]) => setDraft((current) => ({ ...current, [key]: value }));
+  const submit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setSaving(true);
+    try {
+      const next = await readJson<AppState>(await fetch('/api/profile', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(draft),
+      }));
+      setDraft(next.profile);
+      setState(next);
+      notify('Objetivos guardados. Tu plan diario ya fue actualizado.');
+    } catch (error) {
+      notify(error instanceof Error ? error.message : 'No se pudieron guardar tus objetivos.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <section className="page-view goals-view">
+      <form className="goals-layout" onSubmit={submit}>
+        <div className="goals-form">
+          <section className="goal-section">
+            <div className="goal-section-title"><span><Target size={19} /></span><div><p className="eyebrow">Tu meta</p><h2>Que queres conseguir</h2></div></div>
+            <div className="goal-choice-grid">{goalChoices.map((choice) => <button aria-pressed={draft.goalType === choice.value} className={draft.goalType === choice.value ? 'goal-choice selected' : 'goal-choice'} key={choice.value} onClick={() => update('goalType', choice.value)} type="button"><span>{draft.goalType === choice.value ? <Check size={16} /> : <Target size={16} />}</span><strong>{choice.label}</strong><small>{choice.detail}</small></button>)}</div>
+          </section>
+
+          <section className="goal-section">
+            <div className="goal-section-title"><span><Scale size={19} /></span><div><p className="eyebrow">Punto de partida</p><h2>Tus datos actuales</h2></div></div>
+            <div className="goal-fields">
+              <label>Nombre<input required value={draft.name} onChange={(event) => update('name', event.target.value)} /></label>
+              <label>Ciudad<input required value={draft.city} onChange={(event) => update('city', event.target.value)} /></label>
+              <label>Edad<input required min="18" max="100" type="number" value={draft.age} onChange={(event) => update('age', Number(event.target.value))} /></label>
+              <label>Referencia metabolica<select value={draft.metabolicReference} onChange={(event) => update('metabolicReference', event.target.value as Profile['metabolicReference'])}><option value="neutral">Estimacion neutral</option><option value="female">Femenina</option><option value="male">Masculina</option></select></label>
+              <label>Altura<input required min="120" max="230" type="number" value={draft.heightCm} onChange={(event) => update('heightCm', Number(event.target.value))} /><span>cm</span></label>
+              <label>Peso actual<input required min="35" max="300" step="0.1" type="number" value={draft.currentWeightKg} onChange={(event) => update('currentWeightKg', Number(event.target.value))} /><span>kg</span></label>
+              <label className="goal-weight">Peso objetivo<input required min="35" max="300" step="0.1" type="number" value={draft.goalWeightKg} onChange={(event) => update('goalWeightKg', Number(event.target.value))} /><span>kg</span></label>
+            </div>
+          </section>
+
+          <section className="goal-section">
+            <div className="goal-section-title"><span><Activity size={19} /></span><div><p className="eyebrow">Movimiento</p><h2>Como es una semana normal</h2></div></div>
+            <div className="goal-fields">
+              <label className="wide-field">Movimiento cotidiano<select value={draft.activityLevel} onChange={(event) => update('activityLevel', event.target.value as Profile['activityLevel'])}><option value="sedentary">Mayormente sentada/o</option><option value="light">Me muevo un poco durante el dia</option><option value="moderate">Dia bastante activo</option><option value="high">Trabajo o rutina muy activa</option></select></label>
+              <label>Dias de ejercicio por semana<input required min="0" max="7" type="number" value={draft.exerciseDaysPerWeek} onChange={(event) => update('exerciseDaysPerWeek', Number(event.target.value))} /></label>
+              <label>Minutos por sesion<input required min="0" max="300" step="5" type="number" value={draft.exerciseMinutes} onChange={(event) => update('exerciseMinutes', Number(event.target.value))} /><span>min</span></label>
+              <label>Tiempo para cocinar<select value={draft.mealPrepMinutes} onChange={(event) => update('mealPrepMinutes', Number(event.target.value))}><option value="15">Hasta 15 minutos</option><option value="30">Hasta 30 minutos</option><option value="45">Hasta 45 minutos</option><option value="60">Una hora o mas</option></select></label>
+            </div>
+          </section>
+
+          <section className="goal-section">
+            <div className="goal-section-title"><span><Utensils size={19} /></span><div><p className="eyebrow">Preferencias</p><h2>Lo que debe respetar tu agente</h2></div></div>
+            <div className="goal-fields">
+              <label>Tipo de alimentacion<select value={draft.dietaryPreference} onChange={(event) => update('dietaryPreference', event.target.value)}><option>Sin preferencia</option><option>Vegetariana</option><option>Vegana</option><option>Sin gluten</option><option>Baja en lactosa</option></select></label>
+              <label>Alergias o intolerancias<input value={draft.allergies} onChange={(event) => update('allergies', event.target.value)} placeholder="Ej. mani, lactosa" /></label>
+              <label className="wide-field">Alimentos que no te gustan<input value={draft.dislikes} onChange={(event) => update('dislikes', event.target.value)} placeholder="Ej. brocoli" /></label>
+            </div>
+          </section>
+        </div>
+
+        <aside className="goal-result">
+          <span className="result-icon"><Target size={23} /></span>
+          <p className="eyebrow">Estimacion diaria</p>
+          <h2>{targets.calorieMin.toLocaleString('es-UY')}-{targets.calorieMax.toLocaleString('es-UY')} kcal</h2>
+          <p className="result-copy">Calculado con tus datos, movimiento, ejercicio y objetivo.</p>
+          <div className="result-macros"><div><strong>{targets.proteinGrams} g</strong><small>Proteina</small></div><div><strong>{targets.carbsGrams} g</strong><small>Carbohidratos</small></div><div><strong>{targets.fatGrams} g</strong><small>Grasas</small></div></div>
+          <div className="goal-progress"><span><small>Actual</small><strong>{draft.currentWeightKg} kg</strong></span><div><span style={{ width: `${Math.min(100, Math.max(8, 100 - Math.abs(draft.currentWeightKg - draft.goalWeightKg) * 8))}%` }} /></div><span><small>Objetivo</small><strong>{draft.goalWeightKg} kg</strong></span></div>
+          <div className="safety-box"><AlertTriangle size={18} /><p>Es una estimacion general para bienestar. Embarazo, enfermedades, alergias graves o metas clinicas requieren evaluacion profesional.</p></div>
+          <button className="primary-button save-goals" disabled={saving} type="submit">{saving ? <LoaderCircle className="spin" size={17} /> : <Check size={17} />} Guardar y actualizar mi plan</button>
+        </aside>
+      </form>
+    </section>
+  );
 }
 
 function SectionHeading({ eyebrow, title, action, onAction }: { eyebrow: string; title: string; action?: string; onAction?: () => void }) {
@@ -449,11 +539,6 @@ function RecipeModal({ recipe, close, cook, busy }: { recipe: Recipe; close: () 
 function SummaryModal({ summary, close, notify }: { summary: string; close: () => void; notify: (text: string) => void }) {
   const copy = async () => { await navigator.clipboard.writeText(summary); notify('Resumen copiado.'); };
   return <ModalShell title="Resumen para WhatsApp" close={close}><div className="whatsapp-preview"><div className="wa-header"><span><MessageCircleMore size={19} /></span><div><strong>nutrIAhorro</strong><small>Resumen diario</small></div></div><div className="wa-body">{summary ? <div className="wa-bubble">{summary}</div> : <div className="summary-loading"><LoaderCircle className="spin" size={22} /> Preparando resumen...</div>}</div></div><p className="modal-note">En n8n, este texto se envia por YCloud. Fuera de la ventana de 24 horas, WhatsApp exige una plantilla aprobada.</p><div className="modal-actions"><button className="secondary-button" onClick={close} type="button">Cerrar</button><button className="primary-button" disabled={!summary} onClick={copy} type="button"><Copy size={17} /> Copiar resumen</button></div></ModalShell>;
-}
-
-function ProfileModal({ state, close }: { state: AppState; close: () => void }) {
-  const p = state.profile;
-  return <ModalShell title="Perfil de Lia" close={close}><div className="profile-summary"><span className="large-avatar"><CircleUserRound size={31} /></span><div><strong>{p.name}</strong><p><MapPin size={14} /> {p.city}</p></div></div><div className="profile-metrics"><div><small>Altura</small><strong>{p.heightCm} cm</strong></div><div><small>Peso actual</small><strong>{p.currentWeightKg} kg</strong></div><div><small>Objetivo</small><strong>{p.goalWeightKg} kg</strong></div><div><small>Rango diario</small><strong>{p.calorieMin}-{p.calorieMax} kcal</strong></div></div><div className="safety-box"><AlertTriangle size={18} /><p>Estos valores son datos de demostracion aportados por la usuaria. nutrIAhorro ofrece orientacion general y no diagnostica ni prescribe dietas.</p></div><div className="modal-actions"><button className="primary-button" onClick={close} type="button">Listo</button></div></ModalShell>;
 }
 
 function ChatDrawer({ messages, input, setInput, send, close, busy }: { messages: Array<{ role: 'agent' | 'user'; text: string }>; input: string; setInput: (value: string) => void; send: (value?: string) => void; close: () => void; busy: boolean }) {

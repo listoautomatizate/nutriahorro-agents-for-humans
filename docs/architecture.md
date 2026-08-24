@@ -20,7 +20,7 @@ flowchart LR
 1. La persona envia una foto del ticket o carga alimentos manualmente.
 2. El archivo se guarda en R2 y los productos normalizados se escriben en D1.
 3. La despensa calcula stock y prioridad de consumo por fecha.
-4. El agente consulta perfil, preferencias, tiempo disponible y despensa.
+4. El agente consulta objetivos, movilidad, ejercicio, preferencias, tiempo disponible y despensa.
 5. Las herramientas proponen recetas y comparan una canasta cercana con el costo de traslado.
 6. n8n prepara el resumen diario y YCloud lo entrega por WhatsApp.
 7. Cuando la persona confirma que cocino, se descuentan los ingredientes y queda registro de la accion.

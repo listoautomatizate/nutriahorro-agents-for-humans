@@ -16,6 +16,21 @@ export const profiles = sqliteTable('profiles', {
   updatedAt: text('updated_at').notNull(),
 });
 
+export const profileGoals = sqliteTable('profile_goals', {
+  profileId: text('profile_id').primaryKey(),
+  age: integer('age').notNull(),
+  metabolicReference: text('metabolic_reference').notNull(),
+  goalType: text('goal_type').notNull(),
+  activityLevel: text('activity_level').notNull(),
+  exerciseDaysPerWeek: integer('exercise_days_per_week').notNull(),
+  exerciseMinutes: integer('exercise_minutes').notNull(),
+  mealPrepMinutes: integer('meal_prep_minutes').notNull(),
+  dietaryPreference: text('dietary_preference').notNull(),
+  allergies: text('allergies').notNull(),
+  dislikes: text('dislikes').notNull(),
+  updatedAt: text('updated_at').notNull(),
+});
+
 export const pantryItems = sqliteTable('pantry_items', {
   id: text('id').primaryKey(),
   profileId: text('profile_id').notNull(),
