@@ -1,31 +1,41 @@
 # Division del trabajo
 
-## Lia: experiencia, automatizacion y demostracion
+## Lia: decisiones, validacion y presentacion
 
-- Validar el texto y la personalidad de nutrIAhorro.
-- Importar y probar los tres flujos de n8n.
-- Configurar YCloud dentro de n8n sin compartir la clave.
-- Confirmar el numero emisor y el numero de prueba.
-- Sustituir precios ficticios por capturas o catalogos vigentes cuando esten disponibles.
+- Autorizar que la web y el repositorio pasen a ser publicos.
+- Entregar el usuario de GitHub y el usuario de Devpost.
+- Confirmar nombre y usuario de Devpost de su hermano.
+- Validar el texto, la personalidad y los datos de demostracion.
 - Probar el recorrido completo como usuaria.
-- Grabar voz y pantalla para el video final.
+- Grabar la voz o aparecer en el video si lo desea.
+- Revisar y autorizar la entrega final en Devpost.
 
-## Hermano: AWS y agente
+## Hermano: todo el trabajo tecnico pendiente
 
-- Crear o revisar la cuenta AWS y el Builder ID.
-- Solicitar los creditos promocionales.
+- Crear o revisar la cuenta AWS y el AWS Builder ID.
+- Confirmar la solicitud de creditos promocionales.
+- Publicar el repositorio en GitHub con licencia MIT visible.
 - Instalar dependencias de `agent/requirements.txt`.
-- Activar acceso a Bedrock en `us-east-1`.
-- Ejecutar el agente y validar `/health`, `/chat` y `/summary`.
-- Desplegar el servicio en AgentCore o una alternativa AWS.
-- Entregar a Lia solamente la URL segura del agente.
+- Activar acceso a Amazon Bedrock.
+- Ejecutar el agente y validar `/health` y `/chat`.
+- Probar las cinco herramientas: perfil, despensa, recetas, compra y registro de comida.
+- Desplegar el agente en AgentCore, o documentar honestamente la ejecucion local con Bedrock.
+- Conectar el agente real a la web mediante `NUTRIAHORRO_AGENT_URL`.
+- Verificar la web publica en computadora y celular.
+- Preparar el diagrama final y grabar la demostracion tecnica.
+- Subir el video publico a YouTube o Vimeo.
+- Completar junto con Lia todos los campos de Devpost.
+- Revisar que ningun secreto ni dato personal quede en GitHub.
 
-## Integracion de ambas partes
+## Integracion final
 
-1. El hermano publica el agente y obtiene su URL HTTPS.
-2. Lia agrega esa URL como `NUTRIAHORRO_AGENT_URL` en el alojamiento web.
-3. n8n consulta `/summary` para preparar el mensaje diario.
-4. YCloud entrega el mensaje al WhatsApp de prueba.
-5. Ambos ejecutan el guion de demostracion completo y corrigen cualquier dato ficticio no rotulado.
+1. El hermano prueba Strands + Bedrock y publica el agente.
+2. Conecta `NUTRIAHORRO_AGENT_URL` en el alojamiento web.
+3. Ambos prueban una consulta que obligue al agente a usar herramientas.
+4. Prueban objetivos, ticket, despensa, receta, descuento de stock y compra contextual.
+5. Graban el video siguiendo `docs/demo-script-es.md`.
+6. Abren web, GitHub y video en una ventana privada.
+7. Lia revisa y autoriza la presentacion definitiva en Devpost.
 
-La interfaz, la base de datos y los flujos pueden probarse antes de que AWS este listo. Esa separacion permite que ambos trabajen en paralelo.
+La interfaz y la base de datos pueden probarse antes de que AWS este listo. No
+se debe afirmar que AgentCore esta activo hasta haberlo desplegado y probado.

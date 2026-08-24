@@ -10,7 +10,6 @@ import {
   ChefHat,
   ChevronRight,
   Clock3,
-  Copy,
   Droplets,
   Footprints,
   Gauge,
@@ -39,7 +38,7 @@ import { calculateNutritionTargets } from '@/lib/nutrition';
 import type { AppState, GoalType, PantryItem, Profile, Recipe, ShoppingOption, TransportMode } from '@/lib/types';
 
 type ViewName = 'Hoy' | 'Objetivos' | 'Despensa' | 'Recetas' | 'Compra';
-type ModalName = 'add' | 'receipt' | 'recipe' | 'summary' | null;
+type ModalName = 'add' | 'receipt' | 'recipe' | null;
 
 const navItems: Array<{ label: ViewName; icon: typeof Home }> = [
   { label: 'Hoy', icon: Home },
@@ -106,7 +105,6 @@ export default function NutriahorroApp() {
   const [busy, setBusy] = useState(false);
   const [syncStatus, setSyncStatus] = useState<'loading' | 'saved' | 'offline'>('loading');
   const [toast, setToast] = useState<string | null>(null);
-  const [summary, setSummary] = useState('');
   const [chatOpen, setChatOpen] = useState(false);
   const [chatMessages, setChatMessages] = useState<Array<{ role: 'agent' | 'user'; text: string }>>([
     { role: 'agent', text: 'Hola, Lia. Puedo ayudarte a elegir que cocinar, que usar primero o donde conviene comprar.' },
@@ -168,17 +166,6 @@ export default function NutriahorroApp() {
     }
   };
 
-  const showSummary = async () => {
-    setModal('summary');
-    setSummary('');
-    try {
-      const result = await readJson<{ message: string }>(await fetch('/api/summary'));
-      setSummary(result.message);
-    } catch {
-      setSummary('No pude preparar el resumen en este momento.');
-    }
-  };
-
   const sendChat = async (messageOverride?: string) => {
     const message = (messageOverride || chatInput).trim();
     if (!message || busy) return;
@@ -199,7 +186,7 @@ export default function NutriahorroApp() {
 
   return (
     <div className="app-shell">
-      <Sidebar active={active} navigate={navigate} showSummary={showSummary} profile={state.profile} showProfile={() => navigate('Objetivos')} />
+      <Sidebar active={active} navigate={navigate} showAgent={() => setChatOpen(true)} profile={state.profile} showProfile={() => navigate('Objetivos')} />
 
       <main className="main-area">
         <Header
@@ -246,14 +233,13 @@ export default function NutriahorroApp() {
       {modal === 'add' && <AddItemModal close={() => setModal(null)} setState={setState} notify={setToast} />}
       {modal === 'receipt' && <ReceiptModal close={() => setModal(null)} setState={setState} notify={setToast} />}
       {modal === 'recipe' && selectedRecipe && <RecipeModal recipe={selectedRecipe} close={() => setModal(null)} cook={cook} busy={busy} />}
-      {modal === 'summary' && <SummaryModal summary={summary} close={() => setModal(null)} notify={setToast} />}
       {chatOpen && <ChatDrawer messages={chatMessages} input={chatInput} setInput={setChatInput} send={sendChat} close={() => setChatOpen(false)} busy={busy} />}
       {toast && <div className="toast" role="status"><Check size={17} />{toast}</div>}
     </div>
   );
 }
 
-function Sidebar({ active, navigate, showSummary, showProfile, profile }: { active: ViewName; navigate: (view: ViewName) => void; showSummary: () => void; showProfile: () => void; profile: Profile }) {
+function Sidebar({ active, navigate, showAgent, showProfile, profile }: { active: ViewName; navigate: (view: ViewName) => void; showAgent: () => void; showProfile: () => void; profile: Profile }) {
   return (
     <aside className="sidebar">
       <div className="brand" aria-label="nutrIAhorro">
@@ -267,9 +253,9 @@ function Sidebar({ active, navigate, showSummary, showProfile, profile }: { acti
         })}
       </nav>
       <div className="sidebar-card">
-        <Sparkles size={18} /><strong>Resumen diario</strong>
-        <p>Listo para enviar por WhatsApp a las 19:30.</p>
-        <button onClick={showSummary} type="button">Ver resumen</button>
+        <Sparkles size={18} /><strong>Agente inteligente</strong>
+        <p>Consulta tu despensa, tus objetivos y la compra que mas conviene.</p>
+        <button onClick={showAgent} type="button">Abrir agente</button>
       </div>
       <button className="profile-button" onClick={showProfile} type="button">
         <span className="avatar">{profile.name.slice(0, 1).toUpperCase()}</span><span><strong>{profile.name}</strong><small>{profile.city}</small></span><ChevronRight size={17} />
@@ -534,11 +520,6 @@ function ReceiptModal({ close, setState, notify }: { close: () => void; setState
 
 function RecipeModal({ recipe, close, cook, busy }: { recipe: Recipe; close: () => void; cook: (recipe: Recipe) => void; busy: boolean }) {
   return <ModalShell title={recipe.name} close={close} wide><div className="recipe-detail"><div className="recipe-detail-summary"><span className="meal-tag">{recipe.priority}</span><p>{recipe.description}</p><div><span><Clock3 size={17} /><strong>{recipe.prepMinutes}</strong><small>minutos</small></span><span><Gauge size={17} /><strong>{recipe.calories}</strong><small>kcal</small></span><span><Utensils size={17} /><strong>{recipe.protein} g</strong><small>proteina</small></span></div></div><div className="recipe-columns"><div><h3>De tu despensa</h3><ul className="ingredient-list">{recipe.ingredients.map((item) => <li key={item.label}><Check size={15} /><span>{item.label}</span><strong>{item.quantity} {item.unit}</strong></li>)}</ul></div><div><h3>Preparacion</h3><ol className="step-list">{recipe.steps.map((step, index) => <li key={step}><span>{index + 1}</span><p>{step}</p></li>)}</ol></div></div><div className="modal-actions"><button className="secondary-button" onClick={close} type="button">Volver</button><button className="primary-button" disabled={busy} onClick={() => cook(recipe)} type="button">{busy ? <LoaderCircle className="spin" size={17} /> : <Check size={17} />} Marcar como cocinada</button></div></div></ModalShell>;
-}
-
-function SummaryModal({ summary, close, notify }: { summary: string; close: () => void; notify: (text: string) => void }) {
-  const copy = async () => { await navigator.clipboard.writeText(summary); notify('Resumen copiado.'); };
-  return <ModalShell title="Resumen para WhatsApp" close={close}><div className="whatsapp-preview"><div className="wa-header"><span><MessageCircleMore size={19} /></span><div><strong>nutrIAhorro</strong><small>Resumen diario</small></div></div><div className="wa-body">{summary ? <div className="wa-bubble">{summary}</div> : <div className="summary-loading"><LoaderCircle className="spin" size={22} /> Preparando resumen...</div>}</div></div><p className="modal-note">En n8n, este texto se envia por YCloud. Fuera de la ventana de 24 horas, WhatsApp exige una plantilla aprobada.</p><div className="modal-actions"><button className="secondary-button" onClick={close} type="button">Cerrar</button><button className="primary-button" disabled={!summary} onClick={copy} type="button"><Copy size={17} /> Copiar resumen</button></div></ModalShell>;
 }
 
 function ChatDrawer({ messages, input, setInput, send, close, busy }: { messages: Array<{ role: 'agent' | 'user'; text: string }>; input: string; setInput: (value: string) => void; send: (value?: string) => void; close: () => void; busy: boolean }) {

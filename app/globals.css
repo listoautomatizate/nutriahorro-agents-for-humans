@@ -341,15 +341,6 @@ button { color: inherit; }
 .step-list li { display: grid; grid-template-columns: 24px 1fr; gap: 8px; }
 .step-list li > span { width: 24px; height: 24px; display: grid; place-items: center; border-radius: 50%; background: var(--green-soft); color: var(--green-dark); font-size: 9px; font-weight: 800; }
 .step-list p { margin: 4px 0 0; color: #59655f; font-size: 10px; line-height: 1.4; }
-.whatsapp-preview { overflow: hidden; margin: 20px; border: 1px solid #d4ded8; border-radius: 8px; }
-.wa-header { height: 56px; padding: 0 13px; display: flex; align-items: center; gap: 9px; background: #075e54; color: white; }
-.wa-header > span { width: 32px; height: 32px; display: grid; place-items: center; border-radius: 50%; background: white; color: #075e54; }
-.wa-header strong, .wa-header small { display: block; }
-.wa-header strong { font-size: 11px; }.wa-header small { color: #c9e0db; font-size: 8px; }
-.wa-body { min-height: 260px; padding: 17px; display: flex; align-items: flex-start; justify-content: flex-end; background-color: #e8e1d7; background-image: radial-gradient(rgba(80,96,85,.08) .7px, transparent .7px); background-size: 12px 12px; }
-.wa-bubble { max-width: 88%; padding: 10px 12px; border-radius: 8px 2px 8px 8px; background: #d9fdd3; white-space: pre-wrap; color: #23312a; font-size: 10px; line-height: 1.55; box-shadow: 0 1px 2px rgba(0,0,0,.12); }
-.summary-loading { margin: auto; display: flex; align-items: center; gap: 8px; color: #65716b; font-size: 10px; }
-.modal-note { margin: -6px 20px 0; color: var(--muted); font-size: 9px; line-height: 1.45; }
 .modal > .modal-actions { margin: 0 20px 20px; }
 .profile-summary { margin: 20px; display: flex; align-items: center; gap: 12px; }
 .large-avatar { width: 52px; height: 52px; display: grid; place-items: center; border-radius: 50%; background: var(--tomato-soft); color: var(--tomato); }

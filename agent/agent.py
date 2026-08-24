@@ -9,7 +9,6 @@ from tools import (
     compare_nearby_shopping,
     get_user_profile,
     inspect_pantry,
-    prepare_daily_summary,
     register_cooked_meal,
     suggest_meals,
 )
@@ -23,7 +22,6 @@ Objetivos:
 - Ayudar a usar primero alimentos cercanos a vencer sin comprometer la seguridad.
 - Proponer comidas posibles con la despensa, el tiempo y las preferencias del usuario.
 - Comparar el costo efectivo de la compra: canasta mas traslado de ida y vuelta.
-- Preparar un resumen util para WhatsApp.
 
 Reglas:
 - Consulta las herramientas antes de afirmar que hay stock, una oferta o una distancia.
@@ -51,7 +49,6 @@ def build_agent() -> Agent:
             suggest_meals,
             compare_nearby_shopping,
             register_cooked_meal,
-            prepare_daily_summary,
         ],
     )
 

@@ -4,9 +4,8 @@
 
 - Producto web funcional y adaptable a celular.
 - Memoria persistente de perfil, despensa, recetas y ofertas.
-- Agente Strands con seis herramientas de dominio.
+- Agente Strands con cinco herramientas de dominio.
 - Integracion opcional con Amazon Bedrock Nova Lite.
-- Tres flujos importables de n8n para WhatsApp mediante YCloud.
 - Imagen de portada, licencia MIT, arquitectura y guion de video.
 - Pruebas automatizadas de herramientas y compilacion web.
 
@@ -15,8 +14,6 @@
 - Solicitar los USD 50 de AWS antes del 11 de septiembre a las 12:00 PT.
 - Obtener AWS Builder ID.
 - Activar Bedrock y, si hay tiempo, desplegar en AgentCore.
-- Introducir la clave YCloud dentro de n8n.
-- Confirmar los telefonos de emision y prueba.
 - Crear un repositorio GitHub publico con este contenido.
 - Invitar al hermano al equipo de Devpost.
 - Grabar y subir el video publico a YouTube o Vimeo, maximo 5 minutos.

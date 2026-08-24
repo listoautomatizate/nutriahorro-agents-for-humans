@@ -4,7 +4,6 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 
 from agent import ask
-from tools import prepare_daily_summary
 
 
 app = FastAPI(title="nutrIAhorro Strands Agent", version="1.0.0")
@@ -25,8 +24,3 @@ def chat(request: ChatRequest) -> dict[str, str]:
         return {"answer": ask(request.message), "mode": "strands-bedrock"}
     except Exception as error:
         raise HTTPException(status_code=502, detail=f"Bedrock no respondio: {error}") from error
-
-
-@app.get("/summary")
-def summary() -> dict[str, str]:
-    return {"message": prepare_daily_summary(), "mode": "strands-tool"}

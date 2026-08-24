@@ -27,9 +27,9 @@ La identidad que ejecute el agente necesita permiso para invocar modelos de Bedr
 
 ## Credenciales
 
-- No pegar claves AWS, YCloud ni telefonos privados en el repositorio.
+- No pegar claves AWS ni datos privados en el repositorio.
 - No enviarlas por chat.
-- Configurarlas dentro de AWS, el entorno del servicio y el gestor de credenciales de n8n.
+- Configurarlas dentro de AWS, el entorno del servicio o mediante un rol IAM.
 - Crear una alarma de presupuesto antes de activar la demostracion.
 
 ## AgentCore

@@ -119,20 +119,3 @@ def register_cooked_meal(recipe_id: str, confirmed: bool = False) -> str:
     data["cooked"].append({"recipe_id": recipe_id, "cooked_at": datetime.now(timezone.utc).isoformat()})
     store.write(data)
     return _json({"registered": True, "recipe": recipe["name"]})
-
-
-@tool
-def prepare_daily_summary() -> str:
-    """Build the concise daily message that n8n sends through YCloud to WhatsApp."""
-    data = store.read()
-    priority = [item["name"] for item in data["pantry"] if item["days_left"] <= 3]
-    best_store = _compare_nearby_shopping_data(data["profile"]["transport"])["best"]
-    recipe = _suggest_meals_data(max_minutes=30)[0]
-    return (
-        f"Hola {data['profile']['name']}, este es tu resumen de nutrIAhorro:\n\n"
-        f"Prioriza hoy: {', '.join(priority)}.\n"
-        f"Comida sugerida: {recipe['name']} ({recipe['minutes']} min, {recipe['calories']} kcal).\n"
-        f"Compra conveniente: {best_store['supermarket']}, a {best_store['distance_km']} km. "
-        f"Costo efectivo estimado: ${best_store['effective_cost']}.\n\n"
-        "Informacion general de bienestar; no sustituye asesoramiento profesional."
-    )

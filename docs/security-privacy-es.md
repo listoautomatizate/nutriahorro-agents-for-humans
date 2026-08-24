@@ -6,11 +6,7 @@ El MVP debe utilizar un perfil de demostracion. Antes de manejar datos reales se
 
 ## Secretos
 
-Las claves de AWS y YCloud se guardan en los gestores de credenciales de cada servicio. Los flujos exportados contienen marcadores y nodos de envio deshabilitados para evitar mensajes accidentales.
-
-## WhatsApp
-
-Los mensajes iniciados por la empresa fuera de la ventana de atencion requieren una plantilla `utility` aprobada. El resumen diario no debe enviarse hasta que la persona acepte horario, frecuencia y numero de destino.
+Las claves de AWS se guardan en el entorno local o mediante roles IAM. Nunca se incluyen en el repositorio, capturas, videos ni archivos de demostracion.
 
 ## Nutricion y alimentos
 
