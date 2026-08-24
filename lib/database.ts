@@ -152,6 +152,15 @@ export async function ensureDatabase() {
   const db = env.DB;
   await db.batch(statements.map((sql) => db.prepare(sql)));
 
+  // Remove the original private prototype profile before serving the public demo.
+  await db.batch([
+    db.prepare('DELETE FROM meal_history WHERE profile_id = ?').bind('lia-demo'),
+    db.prepare('DELETE FROM uploads WHERE profile_id = ?').bind('lia-demo'),
+    db.prepare('DELETE FROM pantry_items WHERE profile_id = ?').bind('lia-demo'),
+    db.prepare('DELETE FROM profile_goals WHERE profile_id = ?').bind('lia-demo'),
+    db.prepare('DELETE FROM profiles WHERE id = ?').bind('lia-demo'),
+  ]);
+
   const existing = await db.prepare('SELECT id FROM profiles WHERE id = ?').bind(demoProfile.id).first();
   const now = new Date().toISOString();
   if (existing) {

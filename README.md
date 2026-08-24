@@ -10,9 +10,9 @@ Proyecto creado para **Agents for Humans Hackathon**, categoria **Everyday Agent
 
 El repositorio ya trae un caso reproducible situado en Maldonado, Uruguay:
 
-- Perfil general de bienestar de Lia: 177 cm, 66 kg, objetivo 60 kg.
+- Perfil ficticio de demostracion: 170 cm, 72 kg, objetivo 68 kg.
 - Pantalla de objetivos editable con meta, movilidad, ejercicio, tiempo para cocinar y preferencias.
-- Rango orientativo de 1500 a 1600 kcal y macros cargados por la usuaria.
+- Rango orientativo de 1825 a 1925 kcal calculado desde el perfil de prueba.
 - Compra ficticia en Ta-Ta: pollo, arroz, 12 huevos, tres paltas, tomate y aceite de oliva.
 - Cinco recetas, control de stock y vencimientos, descuento de ingredientes al cocinar.
 - Comparacion demostrativa entre El Dorado, Ta-Ta, Disco y Tienda Inglesa.

@@ -107,7 +107,7 @@ export default function NutriahorroApp() {
   const [toast, setToast] = useState<string | null>(null);
   const [chatOpen, setChatOpen] = useState(false);
   const [chatMessages, setChatMessages] = useState<Array<{ role: 'agent' | 'user'; text: string }>>([
-    { role: 'agent', text: 'Hola, Lia. Puedo ayudarte a elegir que cocinar, que usar primero o donde conviene comprar.' },
+    { role: 'agent', text: 'Hola. Puedo ayudarte a elegir que cocinar, que usar primero o donde conviene comprar.' },
   ]);
   const [chatInput, setChatInput] = useState('');
 
