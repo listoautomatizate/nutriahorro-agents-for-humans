@@ -1,0 +1,30 @@
+{
+  "profile": {
+    "name": "Lia",
+    "city": "Maldonado",
+    "calorie_range": [1500, 1600],
+    "protein_grams": 122,
+    "goal": "perder grasa y estar en forma",
+    "transport": "walking"
+  },
+  "pantry": [
+    {"name": "Pechuga de pollo", "quantity": 800, "unit": "g", "days_left": 2},
+    {"name": "Arroz", "quantity": 1000, "unit": "g", "days_left": 180},
+    {"name": "Huevos", "quantity": 12, "unit": "unidades", "days_left": 20},
+    {"name": "Palta", "quantity": 3, "unit": "unidades", "days_left": 3},
+    {"name": "Tomate", "quantity": 1000, "unit": "g", "days_left": 2},
+    {"name": "Aceite de oliva", "quantity": 750, "unit": "ml", "days_left": 240}
+  ],
+  "recipes": [
+    {"id": "recipe-chicken-rice", "name": "Pollo con arroz, tomate y palta", "minutes": 25, "calories": 532, "protein": 46, "uses": ["Pechuga de pollo", "Arroz", "Tomate", "Palta", "Aceite de oliva"]},
+    {"id": "recipe-omelette", "name": "Omelette cremoso con tomate", "minutes": 15, "calories": 408, "protein": 31, "uses": ["Huevos", "Tomate", "Palta", "Aceite de oliva"]},
+    {"id": "recipe-bowl", "name": "Bowl tibio de pollo y palta", "minutes": 20, "calories": 487, "protein": 43, "uses": ["Pechuga de pollo", "Arroz", "Tomate", "Palta"]}
+  ],
+  "shopping": [
+    {"supermarket": "El Dorado", "distance_km": 0.9, "basket_price": 1086},
+    {"supermarket": "Ta-Ta", "distance_km": 1.2, "basket_price": 1135},
+    {"supermarket": "Disco", "distance_km": 2.4, "basket_price": 1324},
+    {"supermarket": "Tienda Inglesa", "distance_km": 3.7, "basket_price": 1450}
+  ],
+  "cooked": []
+}

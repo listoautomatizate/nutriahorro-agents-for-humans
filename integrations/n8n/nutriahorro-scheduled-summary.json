@@ -1,0 +1,114 @@
+{
+  "name": "nutrIAhorro - Resumen programado por WhatsApp",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "days",
+              "triggerAtHour": 8
+            }
+          ]
+        }
+      },
+      "id": "b534bb44-30ad-43cb-a033-706996f06b91",
+      "name": "Todos los dias a las 8",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [-560, 0]
+    },
+    {
+      "parameters": {
+        "url": "REPLACE_PUBLIC_APP_URL/api/summary",
+        "options": {
+          "timeout": 12000
+        }
+      },
+      "id": "17e12ce2-8423-4ceb-bac6-1832fc35111f",
+      "name": "Pedir resumen a nutrIAhorro",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [-300, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "const message = $json.message ?? 'nutrIAhorro no pudo preparar el resumen de hoy.';\nreturn [{json:{preview:message,ycloud_request:{from:'REPLACE_BUSINESS_PHONE',to:'REPLACE_USER_PHONE',type:'text',text:{body:message,preview_url:false}}}}];"
+      },
+      "id": "1a840c2e-79ae-4997-aa7e-5bf7cf6d81b2",
+      "name": "Preparar envio",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-40, 0]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.ycloud.com/v2/whatsapp/messages/sendDirectly",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.ycloud_request) }}",
+        "options": {}
+      },
+      "id": "4ec8df80-da42-45ab-939c-0017507c8ea1",
+      "name": "Enviar por YCloud",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [220, 0],
+      "disabled": true
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Todos los dias a las 8": {
+      "main": [
+        [
+          {
+            "node": "Pedir resumen a nutrIAhorro",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pedir resumen a nutrIAhorro": {
+      "main": [
+        [
+          {
+            "node": "Preparar envio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preparar envio": {
+      "main": [
+        [
+          {
+            "node": "Enviar por YCloud",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/Montevideo"
+  },
+  "tags": []
+}

@@ -1,0 +1,63 @@
+{
+  "name": "nutrIAhorro - Entradas de WhatsApp con YCloud",
+  "nodes": [
+    {
+      "parameters": {"httpMethod": "POST", "path": "nutriahorro-ycloud-inbound", "options": {}},
+      "id": "c02ab52d-4c8b-4ea8-b52b-1598ae64b8e1",
+      "name": "Webhook de YCloud",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [-560, 0],
+      "webhookId": "b755f78e-e093-46aa-85c5-e4f3a4ac7d8f"
+    },
+    {
+      "parameters": {
+        "jsCode": "const event = $json.body ?? $json;\nif (event.type !== 'whatsapp.inbound_message.received') return [];\nconst msg = event.whatsappInboundMessage ?? {};\nconst type = msg.type ?? 'unknown';\nconst input = type === 'text' ? msg.text?.body : type === 'image' ? msg.image?.caption ?? 'ticket' : type === 'location' ? msg.location?.address ?? msg.location?.name : '';\nconst mediaUrl = type === 'image' ? msg.image?.link : type === 'document' ? msg.document?.link : null;\nreturn [{json:{event_id:event.id,from:msg.from,to:msg.to,customer_name:msg.customerProfile?.name ?? 'Lia',message_type:type,input,media_url:mediaUrl,media_type:msg.image?.mime_type ?? msg.document?.mime_type ?? null}}];"
+      },
+      "id": "a4fbfa6b-8754-435a-b6a7-229350be51ca",
+      "name": "Normalizar entrada",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-300, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $json;\nlet reply;\nif (data.message_type === 'image' || data.message_type === 'document') {\n  reply = 'Recibi tu ticket. Lo guarde para actualizar la despensa y te voy a pedir confirmacion antes de descontar o agregar productos.';\n} else if (data.message_type === 'location') {\n  reply = 'Ubicacion recibida. La voy a usar para comparar supermercados cercanos y sumar el costo real del traslado.';\n} else {\n  const text = String(data.input ?? '').toLowerCase();\n  reply = text.includes('oferta') || text.includes('compr')\n    ? 'La mejor opcion de la prueba es El Dorado: queda a 900 metros y la canasta estimada cuesta $1.086.'\n    : text.includes('venc') || text.includes('primero')\n      ? 'Usa primero pollo, tomate y palta. Guarda el pollo crudo sellado en el estante inferior.'\n      : 'Hoy podes preparar omelette con tomate o pollo con arroz, tomate y palta. ¿Cual preferis?';\n}\nreturn [{json:{...data,reply,ycloud_request:{from:data.to,to:data.from,type:'text',text:{body:reply,preview_url:false}}}}];"
+      },
+      "id": "3c6a1713-ab9c-4da3-8bed-33db0ce78aa4",
+      "name": "Preparar respuesta",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-40, 0]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.ycloud.com/v2/whatsapp/messages/sendDirectly",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {"parameters": [{"name": "Content-Type", "value": "application/json"}]},
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.ycloud_request) }}",
+        "options": {}
+      },
+      "id": "f14f8106-207b-457d-ad53-b6c2ead559f2",
+      "name": "Enviar por YCloud",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [220, 0],
+      "disabled": true
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook de YCloud": {"main": [[{"node": "Normalizar entrada", "type": "main", "index": 0}]]},
+    "Normalizar entrada": {"main": [[{"node": "Preparar respuesta", "type": "main", "index": 0}]]},
+    "Preparar respuesta": {"main": [[{"node": "Enviar por YCloud", "type": "main", "index": 0}]]}
+  },
+  "active": false,
+  "settings": {"executionOrder": "v1"},
+  "tags": []
+}
