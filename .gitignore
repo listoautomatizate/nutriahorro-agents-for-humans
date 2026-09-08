@@ -46,3 +46,9 @@ next-env.d.ts
 .llm-context/
 recordings/
 *.tsbuildinfo
+/agentcore/*.zip
+/agentcore/NutriAhorroAgent/
+/agentcore/.cli/
+/agentcore/cdk/dist/
+/agentcore/cdk/node_modules/
+/agentcore/cdk/package-lock.json
