@@ -6,10 +6,10 @@ This guide keeps credentials out of the repository and minimizes paid runtime. U
 
 - The hackathon credit is optional until a real Bedrock or AgentCore test is required.
 - Redeem a promotional code only at <https://aws.amazon.com/awscredits/> while signed into the intended billing account.
-- An AWS Free Plan account may show the redeem control as unavailable. Switching to a Paid Plan can enable more services and promotional credit eligibility, but it also permits charges beyond credits.
+- The current AWS Free Plan includes Amazon Bedrock and Amazon Bedrock AgentCore, although a new account can still require account-level authorization. Do not change plans unless AWS Support explicitly confirms that it is necessary.
 - AWS Budgets and billing alarms are alerts, not a universal guaranteed hard stop.
 - This project uses Nova Lite, a 60-second idle timeout, a 15-minute maximum runtime lifetime, Lambda concurrency of two, short test prompts, and seven-day bridge log retention.
-- Create one budget with notifications at USD 5, 15, 30, 40, and 45 before deployment. Delete the bridge and AgentCore stacks after judging if they are no longer needed.
+- Create a conservative USD 5 monthly budget before deployment. Treat every notification as a reason to inspect usage immediately. Delete the bridge and AgentCore stacks after judging if they are no longer needed.
 - Never paste a promotional code, card, password, access key, or one-time code into source files, chat, screenshots, or the demo video.
 
 ## Prerequisites
@@ -66,6 +66,19 @@ aws cloudformation describe-stacks --region us-east-1 --stack-name NutriAhorroBr
 
 Store the returned URL as `NUTRIAHORRO_AGENT_URL` and `BRIDGE_SECRET` as `NUTRIAHORRO_AGENT_TOKEN` in the private Sites environment. The token must never be exposed as a browser variable or committed to GitHub.
 
+## Troubleshoot a new-account authorization block
+
+If an Amazon Nova invocation returns `ValidationException: Operation not allowed`, check model availability before changing code or deploying resources:
+
+```bash
+aws bedrock get-foundation-model-availability \
+  --model-id amazon.nova-lite-v1:0 \
+  --region us-east-1 \
+  --profile nutriahorro
+```
+
+When agreement, entitlement, and region are available but `authorizationStatus` is `NOT_AUTHORIZED`, stop deployment and open a free account-support case under **Account Activation > Bedrock Allowlisting**. This is an account-level restriction; do not upgrade the support plan, rotate credentials, or repeatedly invoke the model. Resume deployment only after a tiny Nova test succeeds.
+
 ## Required real tests
 
 1. Ask for today's four nutrition metrics and verify `get_daily_progress` appears in the tool trace.
@@ -90,4 +103,6 @@ Confirm the exact AgentCore removal syntax with `agentcore remove --help` before
 - AgentCore direct code deployment: <https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-get-started-code-deploy-python.html>
 - AgentCore CLI quickstart: <https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-get-started-cli.html>
 - Runtime invocation: <https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-invoke-agent.html>
+- Services included in the AWS Free Plan: <https://docs.aws.amazon.com/accounts/latest/reference/supported-services-sign-up-new.html>
+- Bedrock `Operation not allowed` account restriction: <https://www.repost.aws/knowledge-center/bedrock-invokemodel-api-error>
 - Hackathon rules and credits: <https://agentsforhumans.devpost.com/rules>

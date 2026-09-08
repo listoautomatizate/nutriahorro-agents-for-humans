@@ -17,7 +17,7 @@
 - [x] Confirmacion previa para acciones que cambian datos.
 - [x] Entrada de AgentCore y manifiesto validado.
 - [x] Puente Lambda de minimo privilegio preparado.
-- [ ] Configurar presupuesto y alertas.
+- [x] Configurar presupuesto y alertas.
 - [ ] Canjear credito solo si resulta necesario.
 - [ ] Desplegar y probar AgentCore en `us-east-1`.
 - [ ] Conectar la web al agente real y repetir el recorrido completo.
@@ -31,7 +31,7 @@
 - [x] Texto de Devpost en ingles.
 - [x] Guion de video.
 - [ ] Verificar que GitHub detecte la licencia en About.
-- [ ] Guardar capturas sin correos, ID de cuenta ni secretos.
+- [x] Guardar capturas sin correos, ID de cuenta ni secretos.
 
 ## Presentacion
 
