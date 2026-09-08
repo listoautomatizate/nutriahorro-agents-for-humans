@@ -1,7 +1,9 @@
+import base64
 import json
 import unittest
 from copy import deepcopy
 
+from receipt import _decode_image, _json_from_text, _media_format
 from runtime_context import invocation_context, recorded_actions
 from store import store
 from tools import compare_nearby_shopping, get_daily_progress, inspect_pantry, register_cooked_meal, suggest_meals
@@ -53,6 +55,30 @@ class ToolTests(unittest.TestCase):
             actions = recorded_actions()
         self.assertTrue(result["registered"])
         self.assertEqual(actions[0]["status"], "approved")
+
+    def test_remote_meal_registration_rejects_wrong_confirmation(self) -> None:
+        state = store.read()
+        confirmation = {"type": "cook_recipe", "recipe_id": "recipe-rice-eggs"}
+        with invocation_context(state=state, confirmed_action=confirmation):
+            result = json.loads(register_cooked_meal(recipe_id="recipe-omelette", confirmed=True))
+            actions = recorded_actions()
+        self.assertTrue(result["confirmation_required"])
+        self.assertEqual(actions[0]["recipe_id"], "recipe-omelette")
+
+    def test_receipt_image_validation(self) -> None:
+        encoded = base64.b64encode(b"small-image").decode("ascii")
+        self.assertEqual(_decode_image(encoded), b"small-image")
+        self.assertEqual(_media_format("image/jpeg", "ticket.bin"), "jpeg")
+        with self.assertRaises(ValueError):
+            _decode_image("not-base64")
+        with self.assertRaises(ValueError):
+            _media_format("application/pdf", "ticket.pdf")
+
+    def test_receipt_json_requires_an_item_list(self) -> None:
+        parsed = _json_from_text('Texto previo {"merchant":"Ta-Ta","items":[]} texto final')
+        self.assertEqual(parsed["merchant"], "Ta-Ta")
+        with self.assertRaises(ValueError):
+            _json_from_text('{"merchant":"Ta-Ta"}')
 
 
 if __name__ == "__main__":
