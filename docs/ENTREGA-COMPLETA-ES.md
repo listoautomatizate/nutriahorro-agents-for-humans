@@ -34,6 +34,7 @@ nutrIAhorro no es una copia de una aplicacion de calorias. Es un agente cotidian
 ### Terminado y probado localmente
 
 - Aplicacion web adaptable a computadora y celular.
+- Demo publica desplegada y probada en computadora y celular.
 - Pantallas Hoy, Objetivos, Despensa, Recetas y Compra.
 - Perfil editable con objetivo, actividad, ejercicio, tiempo, preferencias y restricciones.
 - Calculo orientativo de calorias y macronutrientes.
@@ -47,13 +48,14 @@ nutrIAhorro no es una copia de una aplicacion de calorias. Es un agente cotidian
 - Puente AWS de minimo privilegio preparado.
 - D1, R2, modo demostracion, pruebas y documentacion.
 
-### Pendiente de una cuenta externa
+### Pendiente de una autorizacion externa de AWS
 
 - Canjear el credito promocional solo si es necesario.
-- Confirmar acceso al modelo de Bedrock.
+- Esperar que AWS Support retire la restriccion de cuenta que mantiene Nova en `NOT_AUTHORIZED`.
+- Repetir una invocacion minima de Bedrock y confirmar acceso al modelo.
 - Desplegar AgentCore y el puente AWS.
 - Conectar los dos secretos privados del alojamiento web.
-- Publicar la nueva version de la demo.
+- Publicar la version de la demo conectada al agente real.
 - Ejecutar y guardar evidencia de las siete pruebas reales.
 - Grabar y publicar el video.
 - Completar y enviar Devpost.
@@ -92,10 +94,10 @@ No se debe afirmar que AgentCore esta activo hasta que las pruebas reales pasen.
 
 - No crear recursos hasta tener una razon de prueba concreta.
 - Usar `us-east-1` y Amazon Nova Lite.
-- Configurar alertas en USD 5, 15, 30, 40 y 45.
+- Mantener un presupuesto mensual preventivo de USD 5 y revisar cualquier alerta antes de continuar.
 - Limitar sesiones y concurrencia, y realizar prompts cortos.
 - Recordar que AWS Budgets alerta, pero no garantiza un corte universal.
-- No actualizar al Paid Plan ni confirmar un despliegue sin una autorizacion inmediata de Lia.
+- No actualizar al Paid Plan. Detener cualquier despliegue que pueda superar los creditos disponibles.
 
 ## Entrega final
 
