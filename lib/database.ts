@@ -1,6 +1,6 @@
 import { env } from 'cloudflare:workers';
 import { demoOffers, demoPantry, demoProfile, demoRecipes } from './demo-data';
-import type { AppState, Offer, PantryItem, Profile, Recipe } from './types';
+import type { AppState, MealEntry, NutrientTotals, Offer, PantryItem, Profile, Recipe } from './types';
 
 const statements = [
   `CREATE TABLE IF NOT EXISTS profiles (
@@ -73,6 +73,18 @@ const statements = [
     recipe_id TEXT NOT NULL,
     cooked_at TEXT NOT NULL
   )`,
+  `CREATE TABLE IF NOT EXISTS meal_entries (
+    id TEXT PRIMARY KEY,
+    profile_id TEXT NOT NULL,
+    recipe_id TEXT NOT NULL,
+    recipe_name TEXT NOT NULL,
+    meal_date TEXT NOT NULL,
+    cooked_at TEXT NOT NULL,
+    calories INTEGER NOT NULL,
+    protein INTEGER NOT NULL,
+    carbs INTEGER NOT NULL,
+    fat INTEGER NOT NULL
+  )`,
   `CREATE TABLE IF NOT EXISTS uploads (
     id TEXT PRIMARY KEY,
     profile_id TEXT NOT NULL,
@@ -84,7 +96,12 @@ const statements = [
   'CREATE INDEX IF NOT EXISTS idx_pantry_profile_status ON pantry_items(profile_id, status)',
   'CREATE INDEX IF NOT EXISTS idx_offers_store ON offers(supermarket)',
   'CREATE INDEX IF NOT EXISTS idx_history_profile_date ON meal_history(profile_id, cooked_at)',
+  'CREATE INDEX IF NOT EXISTS idx_meal_entries_profile_date ON meal_entries(profile_id, meal_date, cooked_at)',
 ];
+
+const montevideoDate = (date = new Date()) => new Intl.DateTimeFormat('en-CA', {
+  timeZone: 'America/Montevideo', year: 'numeric', month: '2-digit', day: '2-digit',
+}).format(date);
 
 const rowToProfile = (row: Record<string, unknown>, goals?: Record<string, unknown> | null): Profile => ({
   id: String(row.id),
@@ -148,6 +165,24 @@ const rowToOffer = (row: Record<string, unknown>): Offer => ({
   validUntil: String(row.valid_until),
 });
 
+const rowToMealEntry = (row: Record<string, unknown>): MealEntry => ({
+  id: String(row.id),
+  recipeId: String(row.recipe_id),
+  recipeName: String(row.recipe_name),
+  cookedAt: String(row.cooked_at),
+  calories: Number(row.calories),
+  protein: Number(row.protein),
+  carbs: Number(row.carbs),
+  fat: Number(row.fat),
+});
+
+const addTotals = (entries: MealEntry[]): NutrientTotals => entries.reduce<NutrientTotals>((total, entry) => ({
+  calories: total.calories + entry.calories,
+  protein: total.protein + entry.protein,
+  carbs: total.carbs + entry.carbs,
+  fat: total.fat + entry.fat,
+}), { calories: 0, protein: 0, carbs: 0, fat: 0 });
+
 export async function ensureDatabase() {
   const db = env.DB;
   await db.batch(statements.map((sql) => db.prepare(sql)));
@@ -155,6 +190,7 @@ export async function ensureDatabase() {
   // Remove the original private prototype profile before serving the public demo.
   await db.batch([
     db.prepare('DELETE FROM meal_history WHERE profile_id = ?').bind('lia-demo'),
+    db.prepare('DELETE FROM meal_entries WHERE profile_id = ?').bind('lia-demo'),
     db.prepare('DELETE FROM uploads WHERE profile_id = ?').bind('lia-demo'),
     db.prepare('DELETE FROM pantry_items WHERE profile_id = ?').bind('lia-demo'),
     db.prepare('DELETE FROM profile_goals WHERE profile_id = ?').bind('lia-demo'),
@@ -164,41 +200,55 @@ export async function ensureDatabase() {
   const existing = await db.prepare('SELECT id FROM profiles WHERE id = ?').bind(demoProfile.id).first();
   const now = new Date().toISOString();
   if (existing) {
-    await db.prepare(`INSERT OR IGNORE INTO profile_goals (
-      profile_id, age, metabolic_reference, goal_type, activity_level,
-      exercise_days_per_week, exercise_minutes, meal_prep_minutes,
-      dietary_preference, allergies, dislikes, updated_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).bind(
-      demoProfile.id, demoProfile.age, demoProfile.metabolicReference, demoProfile.goalType,
-      demoProfile.activityLevel, demoProfile.exerciseDaysPerWeek, demoProfile.exerciseMinutes,
-      demoProfile.mealPrepMinutes, demoProfile.dietaryPreference, demoProfile.allergies,
-      demoProfile.dislikes, now,
-    ).run();
+    await db.batch([
+      db.prepare(`INSERT OR IGNORE INTO profile_goals (
+        profile_id, age, metabolic_reference, goal_type, activity_level,
+        exercise_days_per_week, exercise_minutes, meal_prep_minutes,
+        dietary_preference, allergies, dislikes, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).bind(
+        demoProfile.id, demoProfile.age, demoProfile.metabolicReference, demoProfile.goalType,
+        demoProfile.activityLevel, demoProfile.exerciseDaysPerWeek, demoProfile.exerciseMinutes,
+        demoProfile.mealPrepMinutes, demoProfile.dietaryPreference, demoProfile.allergies,
+        demoProfile.dislikes, now,
+      ),
+      ...demoRecipes.map((recipe) => db.prepare(`INSERT OR REPLACE INTO recipes (
+        id, name, description, prep_minutes, calories, protein, carbs, fat, priority, ingredients_json, steps_json
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).bind(
+        recipe.id, recipe.name, recipe.description, recipe.prepMinutes, recipe.calories, recipe.protein,
+        recipe.carbs, recipe.fat, recipe.priority, JSON.stringify(recipe.ingredients), JSON.stringify(recipe.steps),
+      )),
+      ...demoOffers.map((offer) => db.prepare(`INSERT OR REPLACE INTO offers (
+        id, supermarket, product, unit, price, regular_price, distance_km, valid_until
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`).bind(
+        offer.id, offer.supermarket, offer.product, offer.unit, offer.price, offer.regularPrice,
+        offer.distanceKm, offer.validUntil,
+      )),
+    ]);
     return;
   }
 
   const seed = [
-    db.prepare(`INSERT INTO profiles (
+    db.prepare(`INSERT OR REPLACE INTO profiles (
       id, name, city, height_cm, current_weight_kg, goal_weight_kg,
       calorie_min, calorie_max, protein_grams, carbs_grams, fat_grams,
       transport_mode, updated_at
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
       .bind(demoProfile.id, demoProfile.name, demoProfile.city, demoProfile.heightCm, demoProfile.currentWeightKg, demoProfile.goalWeightKg, demoProfile.calorieMin, demoProfile.calorieMax, demoProfile.proteinGrams, demoProfile.carbsGrams, demoProfile.fatGrams, demoProfile.transportMode, now),
-    db.prepare(`INSERT INTO profile_goals (
+    db.prepare(`INSERT OR REPLACE INTO profile_goals (
       profile_id, age, metabolic_reference, goal_type, activity_level,
       exercise_days_per_week, exercise_minutes, meal_prep_minutes,
       dietary_preference, allergies, dislikes, updated_at
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
       .bind(demoProfile.id, demoProfile.age, demoProfile.metabolicReference, demoProfile.goalType, demoProfile.activityLevel, demoProfile.exerciseDaysPerWeek, demoProfile.exerciseMinutes, demoProfile.mealPrepMinutes, demoProfile.dietaryPreference, demoProfile.allergies, demoProfile.dislikes, now),
-    ...demoPantry.map((item) => db.prepare(`INSERT INTO pantry_items (
+    ...demoPantry.map((item) => db.prepare(`INSERT OR IGNORE INTO pantry_items (
       id, profile_id, name, category, quantity, unit, purchased_at, best_before, source, status
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
       .bind(item.id, demoProfile.id, item.name, item.category, item.quantity, item.unit, item.purchasedAt, item.bestBefore, item.source, item.status)),
-    ...demoRecipes.map((recipe) => db.prepare(`INSERT INTO recipes (
+    ...demoRecipes.map((recipe) => db.prepare(`INSERT OR REPLACE INTO recipes (
       id, name, description, prep_minutes, calories, protein, carbs, fat, priority, ingredients_json, steps_json
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
       .bind(recipe.id, recipe.name, recipe.description, recipe.prepMinutes, recipe.calories, recipe.protein, recipe.carbs, recipe.fat, recipe.priority, JSON.stringify(recipe.ingredients), JSON.stringify(recipe.steps))),
-    ...demoOffers.map((offer) => db.prepare(`INSERT INTO offers (
+    ...demoOffers.map((offer) => db.prepare(`INSERT OR REPLACE INTO offers (
       id, supermarket, product, unit, price, regular_price, distance_km, valid_until
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`)
       .bind(offer.id, offer.supermarket, offer.product, offer.unit, offer.price, offer.regularPrice, offer.distanceKm, offer.validUntil)),
@@ -211,30 +261,59 @@ export async function ensureDatabase() {
 export async function getAppState(): Promise<AppState> {
   await ensureDatabase();
   const db = env.DB;
-  const [profileRow, goalRow, pantryRows, recipeRows, offerRows, historyRows, uploadRow] = await Promise.all([
+  const today = montevideoDate();
+  const [profileRow, goalRow, pantryRows, recipeRows, offerRows, historyRows, mealRows, uploadRow] = await Promise.all([
     db.prepare('SELECT * FROM profiles WHERE id = ?').bind(demoProfile.id).first<Record<string, unknown>>(),
     db.prepare('SELECT * FROM profile_goals WHERE profile_id = ?').bind(demoProfile.id).first<Record<string, unknown>>(),
     db.prepare('SELECT * FROM pantry_items WHERE profile_id = ? ORDER BY best_before ASC').bind(demoProfile.id).all<Record<string, unknown>>(),
     db.prepare('SELECT * FROM recipes ORDER BY prep_minutes ASC').all<Record<string, unknown>>(),
     db.prepare('SELECT * FROM offers ORDER BY supermarket, product').all<Record<string, unknown>>(),
     db.prepare('SELECT recipe_id FROM meal_history WHERE profile_id = ? ORDER BY cooked_at DESC').bind(demoProfile.id).all<{ recipe_id: string }>(),
+    db.prepare('SELECT * FROM meal_entries WHERE profile_id = ? AND meal_date = ? ORDER BY cooked_at DESC').bind(demoProfile.id, today).all<Record<string, unknown>>(),
     db.prepare('SELECT filename FROM uploads WHERE profile_id = ? ORDER BY created_at DESC LIMIT 1').bind(demoProfile.id).first<{ filename: string }>(),
   ]);
 
   if (!profileRow) throw new Error('No se pudo cargar el perfil de demostracion.');
 
+  const profile = rowToProfile(profileRow, goalRow);
+  const meals = mealRows.results.map(rowToMealEntry);
+  const consumed = addTotals(meals);
+  const calorieStatus = consumed.calories < profile.calorieMin
+    ? 'below'
+    : consumed.calories <= profile.calorieMax ? 'in-range' : 'over';
+  const remainingCalories = calorieStatus === 'below'
+    ? profile.calorieMin - consumed.calories
+    : calorieStatus === 'over' ? profile.calorieMax - consumed.calories : 0;
+
   return {
-    profile: rowToProfile(profileRow, goalRow),
+    profile,
     pantry: pantryRows.results.map(rowToPantry),
     recipes: recipeRows.results.map(rowToRecipe),
     offers: offerRows.results.map(rowToOffer),
     cookedRecipeIds: historyRows.results.map((row) => row.recipe_id),
+    dailyIntake: {
+      date: today,
+      consumed,
+      remaining: {
+        calories: remainingCalories,
+        protein: profile.proteinGrams - consumed.protein,
+        carbs: profile.carbsGrams - consumed.carbs,
+        fat: profile.fatGrams - consumed.fat,
+      },
+      calorieStatus,
+      meals,
+    },
     lastUploadName: uploadRow?.filename ?? null,
   };
 }
 
 export async function upsertPantryItem(item: PantryItem) {
   await ensureDatabase();
+  const normalized = item.unit === 'kg'
+    ? { ...item, quantity: item.quantity * 1000, unit: 'g' }
+    : item.unit === 'l'
+      ? { ...item, quantity: item.quantity * 1000, unit: 'ml' }
+      : item;
   await env.DB.prepare(`INSERT INTO pantry_items (
     id, profile_id, name, category, quantity, unit, purchased_at, best_before, source, status
   ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -247,7 +326,7 @@ export async function upsertPantryItem(item: PantryItem) {
     best_before = excluded.best_before,
     source = excluded.source,
     status = excluded.status`)
-    .bind(item.id, demoProfile.id, item.name, item.category, item.quantity, item.unit, item.purchasedAt, item.bestBefore, item.source, item.status)
+    .bind(normalized.id, demoProfile.id, normalized.name, normalized.category, normalized.quantity, normalized.unit, normalized.purchasedAt, normalized.bestBefore, normalized.source, normalized.status)
     .run();
 }
 
@@ -296,16 +375,49 @@ export async function updateProfile(profile: Profile) {
 export async function cookRecipe(recipeId: string) {
   await ensureDatabase();
   const db = env.DB;
-  const row = await db.prepare('SELECT ingredients_json FROM recipes WHERE id = ?').bind(recipeId).first<{ ingredients_json: string }>();
+  const row = await db.prepare('SELECT * FROM recipes WHERE id = ?').bind(recipeId).first<Record<string, unknown>>();
   if (!row) throw new Error('No encontre esa receta.');
-  const ingredients = JSON.parse(row.ingredients_json) as Recipe['ingredients'];
-  const updates = ingredients.map((ingredient) => db.prepare(`UPDATE pantry_items
-    SET quantity = MAX(0, quantity - ?),
-        status = CASE WHEN quantity - ? <= 1 THEN 'low' ELSE status END
-    WHERE profile_id = ? AND lower(name) = lower(?)`)
-    .bind(ingredient.quantity, ingredient.quantity, demoProfile.id, ingredient.pantryName));
+  const recipe = rowToRecipe(row);
+  const ingredients = recipe.ingredients;
+  const now = new Date();
+  const entryId = crypto.randomUUID();
+  const pantryRows = await db.prepare(`SELECT * FROM pantry_items
+    WHERE profile_id = ? ORDER BY best_before ASC, purchased_at ASC`)
+    .bind(demoProfile.id)
+    .all<Record<string, unknown>>();
+  const pantry = pantryRows.results.map(rowToPantry);
+  const updates: ReturnType<typeof db.prepare>[] = [];
+
+  for (const ingredient of ingredients) {
+    const batches = pantry.filter((item) => item.name.toLowerCase() === ingredient.pantryName.toLowerCase()
+      && item.unit === ingredient.unit && item.quantity > 0);
+    const available = batches.reduce((sum, item) => sum + item.quantity, 0);
+    if (available + 0.0001 < ingredient.quantity) {
+      throw new Error(`No hay suficiente ${ingredient.label.toLowerCase()} para registrar esta comida.`);
+    }
+
+    let remaining = ingredient.quantity;
+    for (const batch of batches) {
+      if (remaining <= 0) break;
+      const consumed = Math.min(batch.quantity, remaining);
+      const nextQuantity = Math.max(0, Math.round((batch.quantity - consumed) * 1000) / 1000);
+      const lowThreshold = batch.unit === 'unidades' ? 2 : 150;
+      const daysLeft = Math.ceil((new Date(batch.bestBefore).getTime() - now.getTime()) / 86400000);
+      const status = nextQuantity <= lowThreshold ? 'low' : daysLeft <= 3 ? 'soon' : 'ok';
+      updates.push(db.prepare('UPDATE pantry_items SET quantity = ?, status = ? WHERE id = ? AND profile_id = ?')
+        .bind(nextQuantity, status, batch.id, demoProfile.id));
+      batch.quantity = nextQuantity;
+      remaining -= consumed;
+    }
+  }
   updates.push(db.prepare('INSERT INTO meal_history (id, profile_id, recipe_id, cooked_at) VALUES (?, ?, ?, ?)')
-    .bind(crypto.randomUUID(), demoProfile.id, recipeId, new Date().toISOString()));
+    .bind(entryId, demoProfile.id, recipeId, now.toISOString()));
+  updates.push(db.prepare(`INSERT INTO meal_entries (
+    id, profile_id, recipe_id, recipe_name, meal_date, cooked_at, calories, protein, carbs, fat
+  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).bind(
+    entryId, demoProfile.id, recipe.id, recipe.name, montevideoDate(now), now.toISOString(),
+    recipe.calories, recipe.protein, recipe.carbs, recipe.fat,
+  ));
   await db.batch(updates);
 }
 
@@ -317,4 +429,21 @@ export async function saveUpload(file: File, objectKey: string) {
   await env.DB.prepare('INSERT INTO uploads (id, profile_id, filename, object_key, content_type, created_at) VALUES (?, ?, ?, ?, ?, ?)')
     .bind(crypto.randomUUID(), demoProfile.id, file.name, objectKey, file.type || 'application/octet-stream', new Date().toISOString())
     .run();
+}
+
+export async function resetDemoState() {
+  await ensureDatabase();
+  const uploads = await env.DB.prepare('SELECT object_key FROM uploads WHERE profile_id = ?')
+    .bind(demoProfile.id)
+    .all<{ object_key: string }>();
+  await Promise.all(uploads.results.map((upload) => env.FILES.delete(upload.object_key)));
+  await env.DB.batch([
+    env.DB.prepare('DELETE FROM meal_entries WHERE profile_id = ?').bind(demoProfile.id),
+    env.DB.prepare('DELETE FROM meal_history WHERE profile_id = ?').bind(demoProfile.id),
+    env.DB.prepare('DELETE FROM uploads WHERE profile_id = ?').bind(demoProfile.id),
+    env.DB.prepare('DELETE FROM pantry_items WHERE profile_id = ?').bind(demoProfile.id),
+    env.DB.prepare('DELETE FROM profile_goals WHERE profile_id = ?').bind(demoProfile.id),
+    env.DB.prepare('DELETE FROM profiles WHERE id = ?').bind(demoProfile.id),
+  ]);
+  await ensureDatabase();
 }

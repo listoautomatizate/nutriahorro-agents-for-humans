@@ -14,13 +14,13 @@ People lose food, money, and time because pantry tracking, meal planning, and su
 
 ## What it does
 
-nutrIAhorro stores a persistent pantry from receipt uploads or manual input, flags low-stock and expiring items, calculates general nutrition targets from the user's goals, suggests meals based on available food and time, deducts ingredients after confirmation, and compares nearby supermarket baskets including walking, bicycle, car, or motorcycle cost.
+nutrIAhorro stores a persistent pantry from receipt uploads or manual input, flags low-stock and expiring items, calculates general nutrition targets from the user's goals, suggests feasible meals based on available quantities and time, deducts the exact ingredients after confirmation, records calories and all three macros, and compares nearby supermarket baskets including walking, bicycle, car, or motorcycle cost.
 
 The current Maldonado demo uses clearly labeled fictional prices for El Dorado, Ta-Ta, Disco, and Tienda Inglesa. Nutrition targets are general wellness preferences and are not medical advice.
 
 ## How we built it
 
-The agent is implemented with Strands Agents SDK and Amazon Bedrock. Its tools retrieve the user profile and pantry, suggest meals, compare shopping options, and register cooked meals after confirmation. The web product uses React, vinext, D1 for persistent structured memory, and R2 for receipt files.
+The agent is implemented with Strands Agents SDK and Amazon Bedrock and is packaged for Amazon Bedrock AgentCore Runtime. Its six tools retrieve the user profile, inspect the pantry, read daily nutrition progress, suggest feasible meals, compare shopping options, and register cooked meals after explicit confirmation. Multimodal receipt extraction uses Amazon Nova, while the web product uses React, vinext, D1 for persistent structured memory, and R2 for receipt files.
 
 ## Challenges
 
@@ -30,9 +30,10 @@ The hardest design problem was deciding when automation should act and when it s
 
 - A coherent end-to-end experience rather than a chat-only prototype.
 - Durable pantry memory with expiry and low-stock priorities.
-- Agent tools that complete real actions and update state.
+- Human-reviewed multimodal receipt extraction before pantry changes.
+- Agent tools that complete real actions and update all connected state.
 - Contextual supermarket comparison that accounts for proximity.
-- Personalized goals connected to calories, macros, recipes, and pantry decisions.
+- Personalized goals connected to calories, protein, carbohydrates, fat, recipes, and pantry decisions.
 - A privacy-conscious design with no secrets in source control.
 
 ## What we learned
@@ -41,7 +42,7 @@ An everyday agent becomes valuable when it reduces decisions, not when it genera
 
 ## What's next
 
-We plan to add consent-based live supermarket catalogs, multimodal receipt extraction with human review, household profiles, configurable reminders, and an AgentCore deployment for managed production operation.
+We plan to add consent-based live supermarket catalogs, household profiles, configurable reminders, barcode scanning, and user-controlled data export and deletion.
 
 ## Built with
 

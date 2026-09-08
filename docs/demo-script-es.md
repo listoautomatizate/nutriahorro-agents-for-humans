@@ -6,6 +6,8 @@
 
 Mostrar la pantalla Hoy con prioridades, macros y ahorro.
 
+Antes de grabar, usar **Restablecer demo** para comenzar con la despensa y el progreso diario originales.
+
 ## 0:35 a 1:15 - Objetivos personales
 
 Abrir Objetivos y mostrar meta, peso, actividad, ejercicio, tiempo y preferencias.
@@ -24,9 +26,9 @@ Mostrar pollo, tomate y palta como prioritarios. Aclarar que el ejemplo usa dato
 
 Abrir Recetas, filtrar por tiempo y entrar a una receta.
 
-"nutrIAhorro combina el perfil, el tiempo disponible y los ingredientes reales. Las metas son orientativas. Cuando confirmo que cocine, descuenta los ingredientes en vez de dejar una recomendacion suelta."
+"nutrIAhorro combina el perfil, el tiempo disponible y los ingredientes reales. Cada receta muestra calorias, proteinas, carbohidratos y grasas. Cuando confirmo que cocine, registra esas cuatro metricas y descuenta las cantidades exactas de la despensa."
 
-Marcar una receta como cocinada y volver a la despensa.
+Marcar una receta como cocinada. Mostrar el progreso actualizado en Hoy y volver a la despensa para comprobar el descuento.
 
 ## 2:50 a 3:40 - Ahorro con contexto
 
@@ -38,7 +40,7 @@ Abrir Compras y alternar caminando, bicicleta, auto y moto.
 
 Abrir el asistente y preguntar: "Que deberia usar primero y donde conviene comprar?"
 
-"La decision la toma un agente construido con Strands Agents SDK y Amazon Bedrock. Tiene herramientas para consultar perfil y despensa, proponer comidas, comparar supermercados y registrar acciones con confirmacion."
+"La decision la toma un agente construido con Strands Agents SDK, Amazon Bedrock y AgentCore. Sus seis herramientas consultan perfil, despensa y progreso diario, proponen comidas, comparan compras y registran acciones solo despues de mi confirmacion."
 
 Mostrar brevemente el diagrama de arquitectura.
 

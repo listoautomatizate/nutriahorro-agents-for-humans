@@ -81,11 +81,34 @@ export type ShoppingOption = {
   items: Offer[];
 };
 
+export type NutrientTotals = {
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+};
+
+export type MealEntry = NutrientTotals & {
+  id: string;
+  recipeId: string;
+  recipeName: string;
+  cookedAt: string;
+};
+
+export type DailyIntake = {
+  date: string;
+  consumed: NutrientTotals;
+  remaining: NutrientTotals;
+  calorieStatus: 'below' | 'in-range' | 'over';
+  meals: MealEntry[];
+};
+
 export type AppState = {
   profile: Profile;
   pantry: PantryItem[];
   recipes: Recipe[];
   offers: Offer[];
   cookedRecipeIds: string[];
+  dailyIntake: DailyIntake;
   lastUploadName: string | null;
 };

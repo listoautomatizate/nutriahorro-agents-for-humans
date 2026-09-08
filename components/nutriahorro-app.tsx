@@ -20,6 +20,7 @@ import {
   MessageCircleMore,
   PackageSearch,
   Plus,
+  RotateCcw,
   Scale,
   ScanLine,
   Search,
@@ -39,6 +40,13 @@ import type { AppState, GoalType, PantryItem, Profile, Recipe, ShoppingOption, T
 
 type ViewName = 'Hoy' | 'Objetivos' | 'Despensa' | 'Recetas' | 'Compra';
 type ModalName = 'add' | 'receipt' | 'recipe' | null;
+type AgentAction = {
+  type: 'cook_recipe';
+  recipe_id: string;
+  recipe_name: string;
+  status: 'confirmation_required' | 'approved';
+};
+type ChatMessage = { role: 'agent' | 'user'; text: string; tools?: string[]; mode?: string; action?: AgentAction };
 
 const navItems: Array<{ label: ViewName; icon: typeof Home }> = [
   { label: 'Hoy', icon: Home },
@@ -54,6 +62,18 @@ const initialState: AppState = {
   recipes: demoRecipes,
   offers: demoOffers,
   cookedRecipeIds: [],
+  dailyIntake: {
+    date: new Date().toISOString().slice(0, 10),
+    consumed: { calories: 0, protein: 0, carbs: 0, fat: 0 },
+    remaining: {
+      calories: demoProfile.calorieMin,
+      protein: demoProfile.proteinGrams,
+      carbs: demoProfile.carbsGrams,
+      fat: demoProfile.fatGrams,
+    },
+    calorieStatus: 'below',
+    meals: [],
+  },
   lastUploadName: null,
 };
 
@@ -97,6 +117,25 @@ async function readJson<T>(response: Response): Promise<T> {
   return data;
 }
 
+async function compactReceiptImage(file: File): Promise<File> {
+  if (file.size <= 850 * 1024) return file;
+  if (!file.type.startsWith('image/') || file.size > 8 * 1024 * 1024) {
+    throw new Error('La foto debe ser una imagen de hasta 8 MB.');
+  }
+  const bitmap = await createImageBitmap(file);
+  const scale = Math.min(1, 1600 / Math.max(bitmap.width, bitmap.height));
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+  canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+  canvas.getContext('2d')?.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+  bitmap.close();
+  const encode = (quality: number) => new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/jpeg', quality));
+  let blob = await encode(0.76);
+  if (blob && blob.size > 900 * 1024) blob = await encode(0.56);
+  if (!blob || blob.size > 1024 * 1024) throw new Error('No pude reducir la foto. Recortala al area del ticket e intenta otra vez.');
+  return new File([blob], file.name.replace(/\.[^.]+$/, '') + '.jpg', { type: 'image/jpeg' });
+}
+
 export default function NutriahorroApp() {
   const [active, setActive] = useState<ViewName>('Hoy');
   const [state, setState] = useState<AppState>(initialState);
@@ -106,7 +145,7 @@ export default function NutriahorroApp() {
   const [syncStatus, setSyncStatus] = useState<'loading' | 'saved' | 'offline'>('loading');
   const [toast, setToast] = useState<string | null>(null);
   const [chatOpen, setChatOpen] = useState(false);
-  const [chatMessages, setChatMessages] = useState<Array<{ role: 'agent' | 'user'; text: string }>>([
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
     { role: 'agent', text: 'Hola. Puedo ayudarte a elegir que cocinar, que usar primero o donde conviene comprar.' },
   ]);
   const [chatInput, setChatInput] = useState('');
@@ -145,6 +184,20 @@ export default function NutriahorroApp() {
     }
   };
 
+  const resetDemo = async () => {
+    if (!window.confirm('¿Restablecer el perfil, la despensa y las comidas de demostracion?')) return;
+    setBusy(true);
+    try {
+      const next = await readJson<AppState>(await fetch('/api/reset', { method: 'POST' }));
+      setState(next);
+      setToast('Demostracion restablecida.');
+    } catch (error) {
+      setToast(error instanceof Error ? error.message : 'No pude restablecer la demostracion.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const openRecipe = (recipe: Recipe) => {
     setSelectedRecipe(recipe);
     setModal('recipe');
@@ -158,7 +211,7 @@ export default function NutriahorroApp() {
       }));
       setState(next);
       setModal(null);
-      setToast('Comida registrada. Actualice las cantidades de tu despensa.');
+      setToast('Comida registrada. Actualice tu ingesta y las cantidades de tu despensa.');
     } catch (error) {
       setToast(error instanceof Error ? error.message : 'No pude registrar la comida.');
     } finally {
@@ -166,17 +219,27 @@ export default function NutriahorroApp() {
     }
   };
 
-  const sendChat = async (messageOverride?: string) => {
+  const sendChat = async (messageOverride?: string, confirmedAction?: AgentAction) => {
     const message = (messageOverride || chatInput).trim();
     if (!message || busy) return;
-    setChatMessages((items) => [...items, { role: 'user', text: message }]);
+    setChatMessages((items) => [
+      ...items.map((item) => confirmedAction && item.action?.recipe_id === confirmedAction.recipe_id
+        ? { ...item, action: undefined }
+        : item),
+      { role: 'user', text: message },
+    ]);
     setChatInput('');
     setBusy(true);
     try {
-      const result = await readJson<{ answer: string }>(await fetch('/api/assistant', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message }),
+      const result = await readJson<{ answer: string; tools?: string[]; mode?: string; actions?: AgentAction[]; state?: AppState }>(await fetch('/api/assistant', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message, confirmedAction }),
       }));
-      setChatMessages((items) => [...items, { role: 'agent', text: result.answer }]);
+      const action = result.actions?.find((item) => item.status === 'confirmation_required');
+      setChatMessages((items) => [...items, { role: 'agent', text: result.answer, tools: result.tools, mode: result.mode, action }]);
+      if (result.state) {
+        setState(result.state);
+        setToast('El agente registro la comida y actualizo tu dia y tu despensa.');
+      }
     } catch (error) {
       setChatMessages((items) => [...items, { role: 'agent', text: error instanceof Error ? error.message : 'No pude responder.' }]);
     } finally {
@@ -195,6 +258,7 @@ export default function NutriahorroApp() {
           syncStatus={syncStatus}
           addItem={() => setModal('add')}
           openReceipt={() => setModal('receipt')}
+          resetDemo={resetDemo}
         />
 
         {active === 'Hoy' && (
@@ -264,7 +328,7 @@ function Sidebar({ active, navigate, showAgent, showProfile, profile }: { active
   );
 }
 
-function Header({ active, profileName, syncStatus, addItem, openReceipt }: { active: ViewName; profileName: string; syncStatus: string; addItem: () => void; openReceipt: () => void }) {
+function Header({ active, profileName, syncStatus, addItem, openReceipt, resetDemo }: { active: ViewName; profileName: string; syncStatus: string; addItem: () => void; openReceipt: () => void; resetDemo: () => void }) {
   const titles: Record<ViewName, string> = {
     Hoy: `Hola, ${profileName}. Esto es lo importante hoy.`,
     Objetivos: 'Tus objetivos definen el plan diario.',
@@ -277,6 +341,7 @@ function Header({ active, profileName, syncStatus, addItem, openReceipt }: { act
       <div><p className="eyebrow">{longDate.format(new Date())}</p><h1>{titles[active]}</h1></div>
       <div className="top-actions">
         <span className={`sync-pill ${syncStatus}`}><span />{syncStatus === 'loading' ? 'Conectando' : syncStatus === 'saved' ? 'Guardado' : 'Modo local'}</span>
+        <button className="icon-button" title="Restablecer demostracion" onClick={resetDemo} type="button"><RotateCcw size={19} /></button>
         <button className="icon-button" title="Cargar ticket" onClick={openReceipt} type="button"><ScanLine size={20} /></button>
         <button className="add-button" onClick={addItem} type="button"><Plus size={18} /><span>Agregar alimento</span></button>
       </div>
@@ -293,6 +358,7 @@ function TodayView({ state, options, urgentItems, openRecipe, navigate, updateTr
         <div className="summary-copy"><span className="status-label"><Sparkles size={15} /> Plan de hoy</span><h2>Comer bien sin desperdiciar lo que ya tenes.</h2><p>Priorice {urgentItems.slice(0, 3).map((item) => item.name.toLowerCase()).join(', ')}. Con tu despensa podes resolver las tres comidas principales.</p></div>
         <MacroGrid state={state} />
       </section>
+      <DailyStatus state={state} />
       <section className="content-grid">
         <div className="content-column">
           <SectionHeading eyebrow="Recetas sugeridas" title="Que podes cocinar" action="Ver todas" onAction={() => navigate('Recetas')} />
@@ -312,14 +378,27 @@ function TodayView({ state, options, urgentItems, openRecipe, navigate, updateTr
   );
 }
 
+function DailyStatus({ state }: { state: AppState }) {
+  const { consumed, remaining, calorieStatus, meals } = state.dailyIntake;
+  const remainingLabel = (value: number) => value >= 0 ? `${value} g` : `${Math.abs(value)} g sobre meta`;
+  const lastMeal = meals[0]?.recipeName;
+  const status = calorieStatus === 'over'
+    ? `Superaste el maximo por ${Math.abs(remaining.calories)} kcal.`
+    : calorieStatus === 'in-range'
+      ? 'Ya estas dentro de tu rango calorico.'
+      : `Te faltan ${remaining.calories} kcal para entrar en tu rango.`;
+  return <div className={`daily-status ${calorieStatus}`}><span><Check size={17} /></span><div><strong>{meals.length ? `${meals.length} ${meals.length === 1 ? 'comida registrada' : 'comidas registradas'} hoy` : 'Todavia no registraste comidas hoy'}</strong><small>{status}{lastMeal ? ` Ultima: ${lastMeal}.` : ''}</small></div><div className="remaining-macros"><span><small>Proteina</small><strong>{remainingLabel(remaining.protein)}</strong></span><span><small>Carbohidratos</small><strong>{remainingLabel(remaining.carbs)}</strong></span><span><small>Grasas</small><strong>{remainingLabel(remaining.fat)}</strong></span></div><strong className="consumed-kcal">{consumed.calories} kcal</strong></div>;
+}
+
 function MacroGrid({ state }: { state: AppState }) {
+  const { consumed } = state.dailyIntake;
   const values = [
-    { icon: Gauge, value: state.profile.calorieMin.toLocaleString('es-UY'), label: 'kcal objetivo', kind: 'flame' },
-    { icon: Utensils, value: `${state.profile.proteinGrams} g`, label: 'proteina', kind: 'protein' },
-    { icon: Wheat, value: `${state.profile.carbsGrams} g`, label: 'carbohidratos', kind: 'carbs' },
-    { icon: Droplets, value: `${state.profile.fatGrams} g`, label: 'grasas', kind: 'fat' },
+    { icon: Gauge, value: `${consumed.calories}`, target: `${state.profile.calorieMin}-${state.profile.calorieMax} kcal`, label: 'calorias', kind: 'flame', progress: consumed.calories / state.profile.calorieMax },
+    { icon: Utensils, value: `${consumed.protein} g`, target: `${state.profile.proteinGrams} g`, label: 'proteina', kind: 'protein', progress: consumed.protein / state.profile.proteinGrams },
+    { icon: Wheat, value: `${consumed.carbs} g`, target: `${state.profile.carbsGrams} g`, label: 'carbohidratos', kind: 'carbs', progress: consumed.carbs / state.profile.carbsGrams },
+    { icon: Droplets, value: `${consumed.fat} g`, target: `${state.profile.fatGrams} g`, label: 'grasas', kind: 'fat', progress: consumed.fat / state.profile.fatGrams },
   ];
-  return <div className="macro-grid">{values.map((item) => { const Icon = item.icon; return <div className="macro-item" key={item.label}><span className={`macro-icon ${item.kind}`}><Icon size={18} /></span><span><strong>{item.value}</strong><small>{item.label}</small></span></div>; })}</div>;
+  return <div className="macro-grid">{values.map((item) => { const Icon = item.icon; return <div className="macro-item" key={item.label}><span className={`macro-icon ${item.kind}`}><Icon size={18} /></span><span><strong>{item.value}</strong><small>{item.label} · meta {item.target}</small><span className="macro-progress"><span style={{ width: `${Math.min(100, Math.max(0, item.progress * 100))}%` }} /></span></span></div>; })}</div>;
 }
 
 function GoalsView({ state, setState, notify }: { state: AppState; setState: (state: AppState) => void; notify: (text: string) => void }) {
@@ -413,7 +492,7 @@ function SectionHeading({ eyebrow, title, action, onAction }: { eyebrow: string;
 
 function MealRow({ recipe, index, open }: { recipe: Recipe; index: number; open: () => void }) {
   const visual = index % 3 === 0 ? 'tomato' : index % 3 === 1 ? 'sun' : 'leaf';
-  return <button className="meal-card" onClick={open} type="button"><span className={`meal-visual ${visual}`} aria-hidden="true">{index % 3 === 0 ? <Utensils size={27} /> : index % 3 === 1 ? <ChefHat size={27} /> : <Leaf size={27} />}</span><span className="meal-copy"><span className="meal-tag">{recipe.priority}</span><strong>{recipe.name}</strong><small><Clock3 size={14} /> {recipe.prepMinutes} min <span /> {recipe.calories} kcal <span /> {recipe.protein} g proteina</small></span><ChevronRight size={19} /></button>;
+  return <button className="meal-card" onClick={open} type="button"><span className={`meal-visual ${visual}`} aria-hidden="true">{index % 3 === 0 ? <Utensils size={27} /> : index % 3 === 1 ? <ChefHat size={27} /> : <Leaf size={27} />}</span><span className="meal-copy"><span className="meal-tag">{recipe.priority}</span><strong>{recipe.name}</strong><small><Clock3 size={14} /> {recipe.prepMinutes} min <span /> {recipe.calories} kcal <span /> P {recipe.protein} g <span /> C {recipe.carbs} g <span /> G {recipe.fat} g</small></span><ChevronRight size={19} /></button>;
 }
 
 function ExpiryRow({ item, open }: { item: PantryItem; open: () => void }) {
@@ -462,7 +541,7 @@ function RecipesView({ state, openRecipe }: { state: AppState; openRecipe: (reci
   const [filter, setFilter] = useState('Todas');
   const filters = ['Todas', 'Menos de 20 min', 'Alta proteina', 'Economica'];
   const recipes = state.recipes.filter((recipe) => filter === 'Todas' || (filter === 'Menos de 20 min' && recipe.prepMinutes <= 20) || (filter === 'Alta proteina' && recipe.protein >= 40) || (filter === 'Economica' && recipe.priority === 'Economica'));
-  return <section className="page-view"><div className="recipe-filter-row">{filters.map((item) => <button className={filter === item ? 'active' : ''} onClick={() => setFilter(item)} key={item} type="button">{item}</button>)}</div><div className="recipe-grid">{recipes.map((recipe, index) => <button className="recipe-card" key={recipe.id} onClick={() => openRecipe(recipe)} type="button"><div className={`recipe-art tone-${index % 4}`}><span><ChefHat size={30} /></span><small>{recipe.prepMinutes} min</small></div><div className="recipe-card-copy"><span className="meal-tag">{recipe.priority}</span><h2>{recipe.name}</h2><p>{recipe.description}</p><div><span><strong>{recipe.calories}</strong> kcal</span><span><strong>{recipe.protein} g</strong> proteina</span><ChevronRight size={18} /></div></div></button>)}</div><p className="nutrition-disclaimer">Informacion general para bienestar. No reemplaza el consejo de un profesional de la salud.</p></section>;
+  return <section className="page-view"><div className="recipe-filter-row">{filters.map((item) => <button className={filter === item ? 'active' : ''} onClick={() => setFilter(item)} key={item} type="button">{item}</button>)}</div><div className="recipe-grid">{recipes.map((recipe, index) => <button className="recipe-card" key={recipe.id} onClick={() => openRecipe(recipe)} type="button"><div className={`recipe-art tone-${index % 4}`}><span><ChefHat size={30} /></span><small>{recipe.prepMinutes} min</small></div><div className="recipe-card-copy"><span className="meal-tag">{recipe.priority}</span><h2>{recipe.name}</h2><p>{recipe.description}</p><div className="recipe-macro-line"><span><strong>{recipe.calories}</strong> kcal</span><span><strong>{recipe.protein} g</strong> P</span><span><strong>{recipe.carbs} g</strong> C</span><span><strong>{recipe.fat} g</strong> G</span><ChevronRight size={18} /></div></div></button>)}</div><p className="nutrition-disclaimer">Informacion general para bienestar. No reemplaza el consejo de un profesional de la salud.</p></section>;
 }
 
 function ShoppingView({ state, options, updateTransport }: { state: AppState; options: ShoppingOption[]; updateTransport: (mode: TransportMode) => void }) {
@@ -507,24 +586,37 @@ function ReceiptModal({ close, setState, notify }: { close: () => void; setState
   const inputRef = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [parsedItems, setParsedItems] = useState<PantryItem[]>([]);
+  const [mode, setMode] = useState<string | null>(null);
   const upload = async () => {
     if (!file) return; setUploading(true);
-    const form = new FormData(); form.append('receipt', file);
     try {
-      const result = await readJson<{ state: AppState; message: string }>(await fetch('/api/receipt', { method: 'POST', body: form }));
-      setState(result.state); close(); notify(result.message);
+      const preparedFile = await compactReceiptImage(file);
+      const form = new FormData(); form.append('receipt', preparedFile);
+      const result = await readJson<{ parsedItems: PantryItem[]; mode: string; message: string }>(await fetch('/api/receipt', { method: 'POST', body: form }));
+      setParsedItems(result.parsedItems); setMode(result.mode); notify(result.message);
     } catch (error) { notify(error instanceof Error ? error.message : 'No pude procesar el ticket.'); } finally { setUploading(false); }
   };
-  return <ModalShell title="Cargar ticket" close={close}><div className="receipt-panel"><input ref={inputRef} hidden type="file" accept="image/*,.pdf" onChange={(event) => setFile(event.target.files?.[0] || null)} /><button className={`drop-zone ${file ? 'has-file' : ''}`} onClick={() => inputRef.current?.click()} type="button">{file ? <><Check size={27} /><strong>{file.name}</strong><span>Listo para procesar</span></> : <><Camera size={28} /><strong>Elegir foto del ticket</strong><span>JPG, PNG o PDF · maximo 8 MB</span></>}</button><div className="demo-receipt"><span><Sparkles size={17} /></span><p><strong>Compra de prueba preparada</strong>Pollo, arroz, 12 huevos, 3 paltas, 1 kg de tomate y aceite de oliva de Ta-Ta.</p></div><div className="modal-actions"><button className="secondary-button" onClick={close} type="button">Cancelar</button><button className="primary-button" disabled={!file || uploading} onClick={upload} type="button">{uploading ? <LoaderCircle className="spin" size={17} /> : <ScanLine size={17} />} Procesar ticket</button></div></div></ModalShell>;
+  const updateParsed = (index: number, patch: Partial<PantryItem>) => setParsedItems((items) => items.map((item, itemIndex) => itemIndex === index ? { ...item, ...patch } : item));
+  const confirm = async () => {
+    setUploading(true);
+    try {
+      const result = await readJson<{ state: AppState; message: string }>(await fetch('/api/receipt', {
+        method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ items: parsedItems }),
+      }));
+      setState(result.state); close(); notify(result.message);
+    } catch (error) { notify(error instanceof Error ? error.message : 'No pude guardar los alimentos.'); } finally { setUploading(false); }
+  };
+  return <ModalShell title="Cargar ticket" close={close} wide><div className="receipt-panel"><input ref={inputRef} hidden type="file" accept="image/jpeg,image/png,image/webp,image/gif" onChange={(event) => { setFile(event.target.files?.[0] || null); setParsedItems([]); }} /><button className={`drop-zone ${file ? 'has-file' : ''}`} onClick={() => inputRef.current?.click()} type="button">{file ? <><Check size={27} /><strong>{file.name}</strong><span>{parsedItems.length ? 'Ticket analizado' : 'Listo para procesar'}</span></> : <><Camera size={28} /><strong>Elegir foto del ticket</strong><span>JPG, PNG o WEBP · maximo 8 MB</span></>}</button>{!parsedItems.length && <div className="demo-receipt"><span><Sparkles size={17} /></span><p><strong>Lectura con revision humana</strong>El agente propone los productos y vos confirmas las cantidades antes de modificar la despensa.</p></div>}{parsedItems.length > 0 && <div className="receipt-review"><div><strong>Revisa antes de guardar</strong><small>{mode === 'aws-agent' ? 'Leido por el agente en AWS' : 'Datos de demostracion del MVP'}</small></div>{parsedItems.map((item, index) => <div className="receipt-review-row" key={item.id}><input aria-label={`Nombre del producto ${index + 1}`} value={item.name} onChange={(event) => updateParsed(index, { name: event.target.value })} /><input aria-label={`Cantidad de ${item.name}`} min="0" step="0.1" type="number" value={item.quantity} onChange={(event) => updateParsed(index, { quantity: Number(event.target.value) })} /><select aria-label={`Unidad de ${item.name}`} value={item.unit} onChange={(event) => updateParsed(index, { unit: event.target.value })}><option>unidades</option><option>g</option><option>kg</option><option>ml</option><option>l</option></select></div>)}</div>}<div className="modal-actions"><button className="secondary-button" onClick={close} type="button">Cancelar</button>{parsedItems.length ? <button className="primary-button" disabled={uploading} onClick={confirm} type="button">{uploading ? <LoaderCircle className="spin" size={17} /> : <Check size={17} />} Confirmar y guardar</button> : <button className="primary-button" disabled={!file || uploading} onClick={upload} type="button">{uploading ? <LoaderCircle className="spin" size={17} /> : <ScanLine size={17} />} Procesar ticket</button>}</div></div></ModalShell>;
 }
 
 function RecipeModal({ recipe, close, cook, busy }: { recipe: Recipe; close: () => void; cook: (recipe: Recipe) => void; busy: boolean }) {
-  return <ModalShell title={recipe.name} close={close} wide><div className="recipe-detail"><div className="recipe-detail-summary"><span className="meal-tag">{recipe.priority}</span><p>{recipe.description}</p><div><span><Clock3 size={17} /><strong>{recipe.prepMinutes}</strong><small>minutos</small></span><span><Gauge size={17} /><strong>{recipe.calories}</strong><small>kcal</small></span><span><Utensils size={17} /><strong>{recipe.protein} g</strong><small>proteina</small></span></div></div><div className="recipe-columns"><div><h3>De tu despensa</h3><ul className="ingredient-list">{recipe.ingredients.map((item) => <li key={item.label}><Check size={15} /><span>{item.label}</span><strong>{item.quantity} {item.unit}</strong></li>)}</ul></div><div><h3>Preparacion</h3><ol className="step-list">{recipe.steps.map((step, index) => <li key={step}><span>{index + 1}</span><p>{step}</p></li>)}</ol></div></div><div className="modal-actions"><button className="secondary-button" onClick={close} type="button">Volver</button><button className="primary-button" disabled={busy} onClick={() => cook(recipe)} type="button">{busy ? <LoaderCircle className="spin" size={17} /> : <Check size={17} />} Marcar como cocinada</button></div></div></ModalShell>;
+  return <ModalShell title={recipe.name} close={close} wide><div className="recipe-detail"><div className="recipe-detail-summary"><span className="meal-tag">{recipe.priority}</span><p>{recipe.description}</p><div><span><Clock3 size={17} /><strong>{recipe.prepMinutes}</strong><small>minutos</small></span><span><Gauge size={17} /><strong>{recipe.calories}</strong><small>kcal</small></span><span><Utensils size={17} /><strong>{recipe.protein} g</strong><small>proteina</small></span><span><Wheat size={17} /><strong>{recipe.carbs} g</strong><small>carbohidratos</small></span><span><Droplets size={17} /><strong>{recipe.fat} g</strong><small>grasas</small></span></div></div><div className="recipe-columns"><div><h3>De tu despensa</h3><ul className="ingredient-list">{recipe.ingredients.map((item) => <li key={item.label}><Check size={15} /><span>{item.label}</span><strong>{item.quantity} {item.unit}</strong></li>)}</ul></div><div><h3>Preparacion</h3><ol className="step-list">{recipe.steps.map((step, index) => <li key={step}><span>{index + 1}</span><p>{step}</p></li>)}</ol></div></div><div className="modal-actions"><button className="secondary-button" onClick={close} type="button">Volver</button><button className="primary-button" disabled={busy} onClick={() => cook(recipe)} type="button">{busy ? <LoaderCircle className="spin" size={17} /> : <Check size={17} />} Marcar como cocinada</button></div></div></ModalShell>;
 }
 
-function ChatDrawer({ messages, input, setInput, send, close, busy }: { messages: Array<{ role: 'agent' | 'user'; text: string }>; input: string; setInput: (value: string) => void; send: (value?: string) => void; close: () => void; busy: boolean }) {
-  const quick = ['¿Que uso primero?', '¿Donde conviene comprar?', 'Necesito algo rapido'];
-  return <div className="drawer-backdrop" onMouseDown={(event) => event.target === event.currentTarget && close()}><aside className="chat-drawer"><header><div><span><Leaf size={19} /></span><div><strong>Agente nutrIAhorro</strong><small>Activo con memoria de tu despensa</small></div></div><button className="row-icon-button" onClick={close} title="Cerrar" type="button"><X size={20} /></button></header><div className="chat-body">{messages.map((item, index) => <div className={`chat-message ${item.role}`} key={`${item.role}-${index}`}>{item.text}</div>)}{busy && <div className="chat-message agent typing"><span /><span /><span /></div>}</div><div className="quick-prompts">{quick.map((item) => <button key={item} onClick={() => send(item)} type="button">{item}</button>)}</div><form className="chat-form" onSubmit={(event) => { event.preventDefault(); send(); }}><input value={input} onChange={(event) => setInput(event.target.value)} placeholder="Preguntale algo" /><button disabled={!input.trim() || busy} title="Enviar" type="submit"><Send size={18} /></button></form></aside></div>;
+function ChatDrawer({ messages, input, setInput, send, close, busy }: { messages: ChatMessage[]; input: string; setInput: (value: string) => void; send: (value?: string, confirmedAction?: AgentAction) => void; close: () => void; busy: boolean }) {
+  const quick = ['¿Como voy con mis macros?', '¿Que uso primero?', 'Necesito algo rapido'];
+  return <div className="drawer-backdrop" onMouseDown={(event) => event.target === event.currentTarget && close()}><aside className="chat-drawer"><header><div><span><Leaf size={19} /></span><div><strong>Agente nutrIAhorro</strong><small>Activo con memoria de tu despensa</small></div></div><button className="row-icon-button" onClick={close} title="Cerrar" type="button"><X size={20} /></button></header><div className="chat-body">{messages.map((item, index) => <div className={`chat-message ${item.role}`} key={`${item.role}-${index}`}><span>{item.text}</span>{item.role === 'agent' && item.tools?.length ? <small className="tool-trace"><Sparkles size={11} /> Consulto: {item.tools.join(', ')}</small> : null}{item.role === 'agent' && item.action ? <button className="chat-action-button" disabled={busy} onClick={() => send(`Confirmo que cocine ${item.action?.recipe_name}. Registrala ahora con recipe_id ${item.action?.recipe_id} y confirmed=true.`, item.action)} type="button"><Check size={15} /> Confirmar comida</button> : null}</div>)}{busy && <div className="chat-message agent typing"><span /><span /><span /></div>}</div><div className="quick-prompts">{quick.map((item) => <button key={item} onClick={() => send(item)} type="button">{item}</button>)}</div><form className="chat-form" onSubmit={(event) => { event.preventDefault(); send(); }}><input value={input} onChange={(event) => setInput(event.target.value)} placeholder="Preguntale algo" /><button disabled={!input.trim() || busy} title="Enviar" type="submit"><Send size={18} /></button></form></aside></div>;
 }
 
 function ModalShell({ title, close, children, wide = false }: { title: string; close: () => void; children: React.ReactNode; wide?: boolean }) {

@@ -1,34 +1,45 @@
 # Lista final para Devpost
 
-## Ya preparado
+## Producto
 
-- Producto web funcional y adaptable a celular.
-- Memoria persistente de perfil, despensa, recetas y ofertas.
-- Agente Strands con cinco herramientas de dominio.
-- Integracion opcional con Amazon Bedrock Nova Lite.
-- Imagen de portada, licencia MIT, arquitectura y guion de video.
-- Pruebas automatizadas de herramientas y compilacion web.
+- [x] Objetivos editables y calculo orientativo de cuatro metricas.
+- [x] Despensa persistente con lotes, stock bajo y vencimientos.
+- [x] Recetas con calorias, proteina, carbohidratos y grasas.
+- [x] Registro de comida y descuento exacto en una sola operacion.
+- [x] Carga manual y ticket con revision antes de guardar.
+- [x] Comparacion de distancia y transporte con precios ficticios rotulados.
+- [x] Experiencia adaptable a computadora y celular.
+- [ ] Probar lectura de un ticket real sin datos privados mediante Bedrock.
 
-## Requiere las cuentas de Lia y su hermano
+## Agente y AWS
 
-- Solicitar los USD 50 de AWS antes del 11 de septiembre a las 12:00 PT.
-- Obtener AWS Builder ID.
-- Activar Bedrock y, si hay tiempo, desplegar en AgentCore.
-- Crear un repositorio GitHub publico con este contenido.
-- Invitar al hermano al equipo de Devpost.
-- Grabar y subir el video publico a YouTube o Vimeo, maximo 5 minutos.
-- Publicar la entrega antes del 14 de septiembre de 2026 a las 17:00 PDT.
+- [x] Agente Strands con seis herramientas.
+- [x] Confirmacion previa para acciones que cambian datos.
+- [x] Entrada de AgentCore y manifiesto validado.
+- [x] Puente Lambda de minimo privilegio preparado.
+- [ ] Configurar presupuesto y alertas.
+- [ ] Canjear credito solo si resulta necesario.
+- [ ] Desplegar y probar AgentCore en `us-east-1`.
+- [ ] Conectar la web al agente real y repetir el recorrido completo.
 
-## Material que debe adjuntarse
+## Repositorio y materiales
 
-- Enlace al repositorio publico.
-- Enlace a la demostracion web.
-- Enlace al video.
-- Diagrama de arquitectura.
-- Lista de servicios AWS y herramientas externas.
-- Declaracion de que los datos y precios del ejemplo son ficticios.
-- Credenciales de prueba solo si se crea un entorno separado sin informacion personal.
+- [x] Repositorio publico.
+- [x] Licencia MIT.
+- [x] README en ingles.
+- [x] Diagrama de arquitectura en SVG.
+- [x] Texto de Devpost en ingles.
+- [x] Guion de video.
+- [ ] Verificar que GitHub detecte la licencia en About.
+- [ ] Guardar capturas sin correos, ID de cuenta ni secretos.
 
-## Recomendacion de presentacion
+## Presentacion
 
-Presentar en **Everyday Agents**. La historia central es: comprar con contexto, consumir antes de desperdiciar y recibir una decision util sin tener que administrar otra aplicacion.
+- [ ] AWS Builder ID listo.
+- [ ] Video de menos de cinco minutos, publico en YouTube o Vimeo.
+- [ ] Problema, audiencia e impacto explicados.
+- [ ] Flujo real mostrado de punta a punta.
+- [ ] Demo, GitHub y video probados en ventana privada.
+- [ ] Integrantes correctos en Devpost.
+- [ ] Publicar antes del 14 de septiembre de 2026 a las 21:00 de Uruguay.
+- [ ] Lia revisa y confirma el envio final.

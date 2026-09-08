@@ -1,0 +1,143 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Secure public bridge from nutrIAhorro Sites to Amazon Bedrock AgentCore Runtime.
+
+Parameters:
+  AgentRuntimeArn:
+    Type: String
+    Description: ARN returned by the AgentCore deployment.
+  SharedSecret:
+    Type: String
+    NoEcho: true
+    MinLength: 32
+    Description: Random bearer token shared only with the Sites server environment.
+  AllowedOrigin:
+    Type: String
+    Default: https://nutriahorro.elartedeinvertir911.chatgpt.site
+
+Resources:
+  BridgeRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: InvokeOnlyNutriAhorroAgent
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: bedrock-agentcore:InvokeAgentRuntime
+                Resource: !Ref AgentRuntimeArn
+
+  BridgeFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Runtime: python3.13
+      Handler: index.handler
+      Role: !GetAtt BridgeRole.Arn
+      Timeout: 60
+      MemorySize: 512
+      ReservedConcurrentExecutions: 2
+      Environment:
+        Variables:
+          AGENT_RUNTIME_ARN: !Ref AgentRuntimeArn
+          SHARED_SECRET: !Ref SharedSecret
+      Code:
+        ZipFile: |
+          import base64
+          import json
+          import os
+          import uuid
+
+          import boto3
+
+          client = boto3.client("bedrock-agentcore")
+
+
+          def response(status, body):
+              return {
+                  "statusCode": status,
+                  "headers": {"content-type": "application/json"},
+                  "body": json.dumps(body),
+              }
+
+
+          def handler(event, _context):
+              headers = {str(k).lower(): str(v) for k, v in (event.get("headers") or {}).items()}
+              expected = os.environ["SHARED_SECRET"]
+              if headers.get("authorization") != f"Bearer {expected}":
+                  return response(401, {"error": "No autorizado."})
+
+              try:
+                  raw = event.get("body") or "{}"
+                  if event.get("isBase64Encoded"):
+                      raw = base64.b64decode(raw).decode("utf-8")
+                  payload = json.loads(raw)
+              except (ValueError, UnicodeDecodeError):
+                  return response(400, {"error": "Solicitud invalida."})
+
+              path = event.get("rawPath") or "/chat"
+              payload["action"] = "parse_receipt" if path.endswith("/receipt") else "chat"
+              session_id = "nutriahorro-session-" + str(uuid.uuid4())
+
+              try:
+                  result = client.invoke_agent_runtime(
+                      agentRuntimeArn=os.environ["AGENT_RUNTIME_ARN"],
+                      runtimeSessionId=session_id,
+                      payload=json.dumps(payload).encode("utf-8"),
+                  )
+                  raw_result = result["response"].read().decode("utf-8")
+                  parsed = json.loads(raw_result)
+                  return response(200, parsed)
+              except Exception:
+                  return response(502, {"error": "El agente no pudo responder."})
+
+  BridgeFunctionUrl:
+    Type: AWS::Lambda::Url
+    Properties:
+      TargetFunctionArn: !GetAtt BridgeFunction.Arn
+      AuthType: NONE
+      InvokeMode: BUFFERED
+      Cors:
+        AllowOrigins:
+          - !Ref AllowedOrigin
+        AllowMethods:
+          - POST
+        AllowHeaders:
+          - authorization
+          - content-type
+        MaxAge: 3600
+
+  BridgeFunctionUrlPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref BridgeFunction
+      Action: lambda:InvokeFunctionUrl
+      Principal: '*'
+      FunctionUrlAuthType: NONE
+
+  BridgeFunctionInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref BridgeFunction
+      Action: lambda:InvokeFunction
+      Principal: '*'
+      InvokedViaFunctionUrl: true
+
+  BridgeLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${BridgeFunction}
+      RetentionInDays: 7
+
+Outputs:
+  AgentBridgeUrl:
+    Description: Set this as NUTRIAHORRO_AGENT_URL in the Sites environment.
+    Value: !GetAtt BridgeFunctionUrl.FunctionUrl

@@ -7,11 +7,13 @@ from strands.models import BedrockModel
 
 from tools import (
     compare_nearby_shopping,
+    get_daily_progress,
     get_user_profile,
     inspect_pantry,
     register_cooked_meal,
     suggest_meals,
 )
+from runtime_context import invocation_context, recorded_actions
 
 
 SYSTEM_PROMPT = """
@@ -22,18 +24,21 @@ Objetivos:
 - Ayudar a usar primero alimentos cercanos a vencer sin comprometer la seguridad.
 - Proponer comidas posibles con la despensa, el tiempo y las preferencias del usuario.
 - Comparar el costo efectivo de la compra: canasta mas traslado de ida y vuelta.
+- Acompanar el progreso diario de calorias, proteina, carbohidratos y grasas.
 
 Reglas:
 - Consulta las herramientas antes de afirmar que hay stock, una oferta o una distancia.
 - Nunca presentes precios de demostracion como ofertas reales o vigentes.
 - Pedi confirmacion antes de descontar alimentos, registrar una comida o cambiar preferencias.
+- Cuando informes una receta, incluye siempre calorias, proteina, carbohidratos y grasas.
+- Cuando informes el progreso diario, muestra consumido y restante de las cuatro metricas.
 - No diagnostiques, no prescribas dietas y no contradigas indicaciones medicas.
 - Si hay alergias, embarazo, una enfermedad o sintomas, aconseja consultar a un profesional.
 - Para seguridad alimentaria, separa crudos de alimentos listos y guarda el pollo crudo sellado abajo.
 """.strip()
 
 
-def build_agent() -> Agent:
+def build_agent(callback_handler=None) -> Agent:
     model = BedrockModel(
         model_id=os.getenv("BEDROCK_MODEL_ID", "us.amazon.nova-lite-v1:0"),
         region_name=os.getenv("AWS_REGION", "us-east-1"),
@@ -46,13 +51,30 @@ def build_agent() -> Agent:
         tools=[
             get_user_profile,
             inspect_pantry,
+            get_daily_progress,
             suggest_meals,
             compare_nearby_shopping,
             register_cooked_meal,
         ],
+        callback_handler=callback_handler,
     )
 
 
-def ask(message: str) -> str:
-    response = build_agent()(message)
-    return str(response)
+def ask(
+    message: str,
+    state: dict | None = None,
+    confirmed_action: dict | None = None,
+) -> dict:
+    used_tools: list[str] = []
+
+    def capture_tools(**kwargs) -> None:
+        tool_use = kwargs.get("current_tool_use")
+        if isinstance(tool_use, dict):
+            name = tool_use.get("name")
+            if name and name not in used_tools:
+                used_tools.append(str(name))
+
+    with invocation_context(state=state, confirmed_action=confirmed_action):
+        response = build_agent(callback_handler=capture_tools)(message)
+        actions = recorded_actions()
+    return {"answer": str(response), "mode": "strands-bedrock", "tools": used_tools, "actions": actions}

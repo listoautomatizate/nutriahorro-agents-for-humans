@@ -1,7 +1,10 @@
 import json
 import unittest
+from copy import deepcopy
 
-from tools import compare_nearby_shopping, inspect_pantry, suggest_meals
+from runtime_context import invocation_context, recorded_actions
+from store import store
+from tools import compare_nearby_shopping, get_daily_progress, inspect_pantry, register_cooked_meal, suggest_meals
 
 
 class ToolTests(unittest.TestCase):
@@ -14,6 +17,13 @@ class ToolTests(unittest.TestCase):
         result = json.loads(suggest_meals(max_minutes=15))
         self.assertEqual([item["id"] for item in result], ["recipe-omelette"])
 
+    def test_meal_filter_rejects_insufficient_stock(self) -> None:
+        state = deepcopy(store.read())
+        next(item for item in state["pantry"] if item["name"] == "Huevos")["quantity"] = 1
+        with invocation_context(state=state):
+            result = json.loads(suggest_meals(max_minutes=15))
+        self.assertEqual(result, [])
+
     def test_walking_has_no_travel_cost(self) -> None:
         result = json.loads(compare_nearby_shopping(transport="walking"))
         self.assertEqual(result["best"]["supermarket"], "El Dorado")
@@ -23,6 +33,26 @@ class ToolTests(unittest.TestCase):
         result = json.loads(compare_nearby_shopping(transport="car"))
         best = result["best"]
         self.assertEqual(best["travel_cost"], round(best["distance_km"] * 2 * 14))
+
+    def test_daily_progress_reports_all_four_nutrients(self) -> None:
+        result = json.loads(get_daily_progress())
+        self.assertEqual(set(result["consumed"]), {"calories", "protein", "carbs", "fat"})
+        self.assertEqual(result["remaining"]["protein"], 130)
+
+    def test_remote_meal_registration_requires_matching_confirmation(self) -> None:
+        state = store.read()
+        with invocation_context(state=state):
+            result = json.loads(register_cooked_meal(recipe_id="recipe-omelette", confirmed=True))
+            actions = recorded_actions()
+        self.assertTrue(result["confirmation_required"])
+        self.assertEqual(actions[0]["status"], "confirmation_required")
+
+        confirmation = {"type": "cook_recipe", "recipe_id": "recipe-omelette"}
+        with invocation_context(state=state, confirmed_action=confirmation):
+            result = json.loads(register_cooked_meal(recipe_id="recipe-omelette", confirmed=True))
+            actions = recorded_actions()
+        self.assertTrue(result["registered"])
+        self.assertEqual(actions[0]["status"], "approved")
 
 
 if __name__ == "__main__":

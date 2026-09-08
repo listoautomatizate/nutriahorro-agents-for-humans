@@ -16,6 +16,8 @@
     "dislikes": "",
     "calorie_range": [1825, 1925],
     "protein_grams": 130,
+    "carbs_grams": 208,
+    "fat_grams": 58,
     "goal": "perder grasa y estar en forma",
     "transport": "walking"
   },
@@ -28,9 +30,9 @@
     {"name": "Aceite de oliva", "quantity": 750, "unit": "ml", "days_left": 240}
   ],
   "recipes": [
-    {"id": "recipe-chicken-rice", "name": "Pollo con arroz, tomate y palta", "minutes": 25, "calories": 532, "protein": 46, "uses": ["Pechuga de pollo", "Arroz", "Tomate", "Palta", "Aceite de oliva"]},
-    {"id": "recipe-omelette", "name": "Omelette cremoso con tomate", "minutes": 15, "calories": 408, "protein": 31, "uses": ["Huevos", "Tomate", "Palta", "Aceite de oliva"]},
-    {"id": "recipe-bowl", "name": "Bowl tibio de pollo y palta", "minutes": 20, "calories": 487, "protein": 43, "uses": ["Pechuga de pollo", "Arroz", "Tomate", "Palta"]}
+    {"id": "recipe-chicken-rice", "name": "Pollo con arroz, tomate y palta", "minutes": 25, "calories": 532, "protein": 46, "carbs": 48, "fat": 17, "uses": ["Pechuga de pollo", "Arroz", "Tomate", "Palta", "Aceite de oliva"], "ingredients": [{"pantryName": "Pechuga de pollo", "quantity": 180, "unit": "g"}, {"pantryName": "Arroz", "quantity": 70, "unit": "g"}, {"pantryName": "Tomate", "quantity": 180, "unit": "g"}, {"pantryName": "Palta", "quantity": 0.5, "unit": "unidades"}, {"pantryName": "Aceite de oliva", "quantity": 8, "unit": "ml"}]},
+    {"id": "recipe-omelette", "name": "Omelette cremoso con tomate", "minutes": 15, "calories": 408, "protein": 31, "carbs": 13, "fat": 25, "uses": ["Huevos", "Tomate", "Palta", "Aceite de oliva"], "ingredients": [{"pantryName": "Huevos", "quantity": 3, "unit": "unidades"}, {"pantryName": "Tomate", "quantity": 160, "unit": "g"}, {"pantryName": "Palta", "quantity": 0.5, "unit": "unidades"}, {"pantryName": "Aceite de oliva", "quantity": 5, "unit": "ml"}]},
+    {"id": "recipe-bowl", "name": "Bowl tibio de pollo y palta", "minutes": 20, "calories": 487, "protein": 43, "carbs": 39, "fat": 18, "uses": ["Pechuga de pollo", "Arroz", "Tomate", "Palta"], "ingredients": [{"pantryName": "Pechuga de pollo", "quantity": 170, "unit": "g"}, {"pantryName": "Arroz", "quantity": 55, "unit": "g"}, {"pantryName": "Tomate", "quantity": 120, "unit": "g"}, {"pantryName": "Palta", "quantity": 0.5, "unit": "unidades"}]}
   ],
   "shopping": [
     {"supermarket": "El Dorado", "distance_km": 0.9, "basket_price": 1086},

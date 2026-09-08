@@ -1,37 +1,93 @@
-# Activacion de AWS y Strands
+# AWS and AgentCore deployment
 
-## Lo que se necesita
+This guide keeps credentials out of the repository and minimizes paid runtime. Use `us-east-1` consistently.
 
-1. Una cuenta AWS con facturacion habilitada.
-2. Un AWS Builder ID para la entrega de Devpost.
-3. Acceso a Amazon Bedrock en `us-east-1`.
-4. Python 3.11 o posterior.
-5. Los USD 50 de credito promocional, si todavia hay disponibilidad.
+## Credit and cost rules
 
-Formulario oficial de creditos: <https://forms.gle/6sjzKiX6bKUMA5NEA>
+- The hackathon credit is optional until a real Bedrock or AgentCore test is required.
+- Redeem a promotional code only at <https://aws.amazon.com/awscredits/> while signed into the intended billing account.
+- An AWS Free Plan account may show the redeem control as unavailable. Switching to a Paid Plan can enable more services and promotional credit eligibility, but it also permits charges beyond credits.
+- AWS Budgets and billing alarms are alerts, not a universal guaranteed hard stop.
+- This project uses Nova Lite, a 60-second idle timeout, a 15-minute maximum runtime lifetime, Lambda concurrency of two, short test prompts, and seven-day bridge log retention.
+- Create one budget with notifications at USD 5, 15, 30, 40, and 45 before deployment. Delete the bridge and AgentCore stacks after judging if they are no longer needed.
+- Never paste a promotional code, card, password, access key, or one-time code into source files, chat, screenshots, or the demo video.
 
-Fecha limite informada por la organizacion: **11 de septiembre de 2026 a las 12:00 PT**, sujeto a disponibilidad. Los creditos vencen el 31 de octubre de 2026.
+## Prerequisites
 
-## Configuracion recomendada
+1. AWS account with the required services available.
+2. AWS Builder ID for the Devpost submission.
+3. Amazon Bedrock model access in `us-east-1`.
+4. An authenticated AWS CloudShell session.
 
-El agente usa por defecto `us.amazon.nova-lite-v1:0`, un modelo multimodal de Amazon Bedrock adecuado para mantener bajo el costo de la demostracion.
+The project defaults to `us.amazon.nova-lite-v1:0` for both agent reasoning and receipt images.
 
-Variables disponibles en `agent/.env.example`:
+## Why CloudShell
 
-```text
-AWS_REGION=us-east-1
-BEDROCK_MODEL_ID=us.amazon.nova-lite-v1:0
+CloudShell uses the current AWS session and avoids creating long-lived IAM access keys. The repository must remain free of credentials.
+
+## Deploy the AgentCore runtime
+
+Run these commands from AWS CloudShell after the public repository contains the final commit:
+
+```bash
+git clone https://github.com/listoautomatizate/nutriahorro-agents-for-humans.git
+cd nutriahorro-agents-for-humans
+npm install -g @aws/agentcore@latest
+python3 -m pip install --user uv
+agentcore validate --directory . --json
+agentcore deploy
 ```
 
-La identidad que ejecute el agente necesita permiso para invocar modelos de Bedrock. En una demostracion local pueden usarse las credenciales configuradas con AWS CLI. En un despliegue conviene utilizar un rol IAM con el menor alcance posible.
+For the deployment target, select the current account and `us-east-1`. Do not use `--yes` on the first deployment: review the resources and estimated changes before confirming.
 
-## Credenciales
+The runtime entrypoint is `agent/main.py`. AgentCore packages `agent/requirements.txt` and deploys the Strands agent using the manifest in `agentcore/agentcore.json`.
 
-- No pegar claves AWS ni datos privados en el repositorio.
-- No enviarlas por chat.
-- Configurarlas dentro de AWS, el entorno del servicio o mediante un rol IAM.
-- Crear una alarma de presupuesto antes de activar la demostracion.
+After deployment:
 
-## AgentCore
+```bash
+agentcore status --json
+agentcore invoke "How am I doing on calories, protein, carbs and fat today?"
+```
 
-AgentCore es opcional para participar. Si el tiempo alcanza, desplegar el agente alli mejora la evidencia tecnica y permite conectar la web mediante `NUTRIAHORRO_AGENT_URL`. El MVP y su modo de demostracion funcionan aunque AgentCore aun no este activo.
+Record the runtime ARN from the status output. Do not publish account identifiers in screenshots.
+
+## Deploy the secure web bridge
+
+The web server cannot call an IAM-protected AgentCore runtime directly without credentials. `infra/agentcore-bridge.yaml` creates a least-privilege Lambda bridge that can invoke only this runtime.
+
+Generate a private token in CloudShell:
+
+```bash
+export BRIDGE_SECRET="$(openssl rand -hex 32)"
+export AGENT_RUNTIME_ARN="paste-the-runtime-arn-here"
+aws cloudformation deploy --region us-east-1 --stack-name NutriAhorroBridge --template-file infra/agentcore-bridge.yaml --capabilities CAPABILITY_IAM --parameter-overrides AgentRuntimeArn="$AGENT_RUNTIME_ARN" SharedSecret="$BRIDGE_SECRET"
+aws cloudformation describe-stacks --region us-east-1 --stack-name NutriAhorroBridge --query "Stacks[0].Outputs[?OutputKey=='AgentBridgeUrl'].OutputValue" --output text
+```
+
+Store the returned URL as `NUTRIAHORRO_AGENT_URL` and `BRIDGE_SECRET` as `NUTRIAHORRO_AGENT_TOKEN` in the private Sites environment. The token must never be exposed as a browser variable or committed to GitHub.
+
+## Required real tests
+
+1. Ask for today's four nutrition metrics and verify `get_daily_progress` appears in the tool trace.
+2. Ask for a meal under 20 minutes and verify `suggest_meals` returns only recipes with sufficient quantities.
+3. Ask what to use first and verify `inspect_pantry` reads current expiry state.
+4. Compare a nearby basket by walking and by car; verify round-trip travel cost changes.
+5. Ask to register a meal; verify the agent requests confirmation.
+6. Confirm once; verify all four daily totals update and exact pantry quantities decrease once.
+7. Upload a readable receipt image; verify Bedrock returns editable candidates and the pantry remains unchanged until confirmation.
+
+## Cleanup after judging
+
+```bash
+aws cloudformation delete-stack --region us-east-1 --stack-name NutriAhorroBridge
+agentcore remove runtime NutriAhorroAgent
+```
+
+Confirm the exact AgentCore removal syntax with `agentcore remove --help` before running it. Never delete resources during the judging period if the submitted live demo depends on them.
+
+## Official references
+
+- AgentCore direct code deployment: <https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-get-started-code-deploy-python.html>
+- AgentCore CLI quickstart: <https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-get-started-cli.html>
+- Runtime invocation: <https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-invoke-agent.html>
+- Hackathon rules and credits: <https://agentsforhumans.devpost.com/rules>

@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="760" viewBox="0 0 1200 760" role="img" aria-labelledby="title description">
+  <title id="title">nutrIAhorro architecture</title>
+  <desc id="description">The web product stores pantry memory in Cloudflare, invokes a Strands agent through a secure AWS bridge, and uses Amazon Bedrock Nova Lite.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#496057"/>
+    </marker>
+    <style>
+      .title { font: 700 30px Arial, sans-serif; fill: #153d32; }
+      .subtitle { font: 400 15px Arial, sans-serif; fill: #52635d; }
+      .box-title { font: 700 18px Arial, sans-serif; fill: #183d33; }
+      .box-copy { font: 400 13px Arial, sans-serif; fill: #4a5d56; }
+      .small { font: 700 12px Arial, sans-serif; fill: #ffffff; }
+      .flow { fill: none; stroke: #496057; stroke-width: 2.5; marker-end: url(#arrow); }
+      .return { fill: none; stroke: #df5a4f; stroke-width: 2.5; stroke-dasharray: 8 6; marker-end: url(#arrow); }
+    </style>
+  </defs>
+  <rect width="1200" height="760" fill="#f7faf8"/>
+  <text x="60" y="60" class="title">nutrIAhorro: confirmed decisions from receipt to meal</text>
+  <text x="60" y="88" class="subtitle">Everyday Agents track · Strands Agents SDK · Amazon Bedrock AgentCore</text>
+
+  <rect x="60" y="155" width="170" height="120" rx="8" fill="#ffffff" stroke="#b9c9c1" stroke-width="2"/>
+  <circle cx="105" cy="205" r="23" fill="#176b4c"/>
+  <text x="98" y="210" class="small">1</text>
+  <text x="140" y="195" class="box-title">Person</text>
+  <text x="140" y="220" class="box-copy">Goals, receipt,</text>
+  <text x="140" y="240" class="box-copy">meal confirmation</text>
+
+  <rect x="300" y="135" width="250" height="160" rx="8" fill="#ffffff" stroke="#2c7a5a" stroke-width="3"/>
+  <rect x="300" y="135" width="250" height="36" rx="8" fill="#176b4c"/>
+  <text x="320" y="159" class="small">PUBLIC WEB EXPERIENCE</text>
+  <text x="325" y="205" class="box-title">React + Cloudflare</text>
+  <text x="325" y="232" class="box-copy">Goals · Today · Pantry</text>
+  <text x="325" y="253" class="box-copy">Recipes · Shopping · Agent</text>
+  <text x="325" y="275" class="box-copy">Human confirmation controls</text>
+
+  <rect x="635" y="155" width="210" height="120" rx="8" fill="#ffffff" stroke="#df5a4f" stroke-width="2"/>
+  <text x="662" y="195" class="box-title">Secure AWS bridge</text>
+  <text x="662" y="220" class="box-copy">Lambda Function URL</text>
+  <text x="662" y="241" class="box-copy">Private bearer token</text>
+  <text x="662" y="262" class="box-copy">Least-privilege IAM role</text>
+
+  <rect x="930" y="135" width="220" height="160" rx="8" fill="#fff8e8" stroke="#d7a532" stroke-width="3"/>
+  <rect x="930" y="135" width="220" height="36" rx="8" fill="#cc8f13"/>
+  <text x="952" y="159" class="small">AWS AGENT RUNTIME</text>
+  <text x="958" y="205" class="box-title">AgentCore Runtime</text>
+  <text x="958" y="232" class="box-copy">Strands agent</text>
+  <text x="958" y="253" class="box-copy">Amazon Nova Lite</text>
+  <text x="958" y="275" class="box-copy">Bedrock multimodal model</text>
+
+  <path d="M230 215 H290" class="flow"/>
+  <path d="M550 215 H625" class="flow"/>
+  <path d="M845 215 H920" class="flow"/>
+  <path d="M930 285 C820 350 630 350 535 285" class="return"/>
+  <text x="668" y="342" class="subtitle">tool result or confirmation request</text>
+
+  <rect x="300" y="390" width="250" height="135" rx="8" fill="#eef7f2" stroke="#6ca88d" stroke-width="2"/>
+  <text x="325" y="427" class="box-title">Persistent memory</text>
+  <text x="325" y="454" class="box-copy">D1: profile, pantry batches,</text>
+  <text x="325" y="475" class="box-copy">daily intake, meals, offers</text>
+  <text x="325" y="496" class="box-copy">R2: receipt image files</text>
+
+  <path d="M425 295 V380" class="flow"/>
+  <path d="M395 390 V305" class="return"/>
+
+  <rect x="635" y="390" width="515" height="250" rx="8" fill="#ffffff" stroke="#b9c9c1" stroke-width="2"/>
+  <text x="665" y="430" class="box-title">Six Strands domain tools</text>
+  <rect x="665" y="456" width="210" height="42" rx="6" fill="#e9f4ef"/>
+  <text x="680" y="482" class="box-copy">get_user_profile</text>
+  <rect x="905" y="456" width="210" height="42" rx="6" fill="#e9f4ef"/>
+  <text x="920" y="482" class="box-copy">inspect_pantry</text>
+  <rect x="665" y="512" width="210" height="42" rx="6" fill="#fff2ef"/>
+  <text x="680" y="538" class="box-copy">get_daily_progress</text>
+  <rect x="905" y="512" width="210" height="42" rx="6" fill="#fff2ef"/>
+  <text x="920" y="538" class="box-copy">suggest_meals</text>
+  <rect x="665" y="568" width="210" height="42" rx="6" fill="#fff8e8"/>
+  <text x="680" y="594" class="box-copy">compare_nearby_shopping</text>
+  <rect x="905" y="568" width="210" height="42" rx="6" fill="#fff8e8"/>
+  <text x="920" y="594" class="box-copy">register_cooked_meal</text>
+
+  <path d="M1040 295 V380" class="flow"/>
+  <path d="M635 605 C590 605 575 550 550 505" class="return"/>
+  <text x="60" y="700" class="subtitle">Safety boundary: receipt results and pantry-changing actions require human confirmation. Demo prices are explicitly labeled fictional.</text>
+</svg>

@@ -76,6 +76,19 @@ export const mealHistory = sqliteTable('meal_history', {
   cookedAt: text('cooked_at').notNull(),
 }, (table) => [index('idx_history_profile_date').on(table.profileId, table.cookedAt)]);
 
+export const mealEntries = sqliteTable('meal_entries', {
+  id: text('id').primaryKey(),
+  profileId: text('profile_id').notNull(),
+  recipeId: text('recipe_id').notNull(),
+  recipeName: text('recipe_name').notNull(),
+  mealDate: text('meal_date').notNull(),
+  cookedAt: text('cooked_at').notNull(),
+  calories: integer('calories').notNull(),
+  protein: integer('protein').notNull(),
+  carbs: integer('carbs').notNull(),
+  fat: integer('fat').notNull(),
+}, (table) => [index('idx_meal_entries_profile_date').on(table.profileId, table.mealDate, table.cookedAt)]);
+
 export const uploads = sqliteTable('uploads', {
   id: text('id').primaryKey(),
   profileId: text('profile_id').notNull(),

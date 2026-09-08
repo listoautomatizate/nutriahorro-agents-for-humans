@@ -1,44 +1,38 @@
-# Arquitectura de nutrIAhorro
+# nutrIAhorro architecture
 
-```mermaid
-flowchart LR
-    U[Persona] --> W[Aplicacion web nutrIAhorro]
-    W --> A[Agente Strands]
-    A --> B[Amazon Bedrock Nova Lite]
-    A --> T[Herramientas de nutricion, despensa y ahorro]
-    W --> D[(D1: memoria estructurada)]
-    W --> R[(R2: tickets)]
-    T --> D
-    A --> W
-```
+![nutrIAhorro architecture](architecture.svg)
 
-## Flujo de una compra
+## End-to-end flow
 
-1. La persona envia una foto del ticket o carga alimentos manualmente.
-2. El archivo se guarda en R2 y los productos normalizados se escriben en D1.
-3. La despensa calcula stock y prioridad de consumo por fecha.
-4. El agente consulta objetivos, movilidad, ejercicio, preferencias, tiempo disponible y despensa.
-5. Las herramientas proponen recetas y comparan una canasta cercana con el costo de traslado.
-6. La interfaz muestra una recomendacion y pide confirmacion cuando la accion modifica la despensa.
-7. Cuando la persona confirma que cocino, se descuentan los ingredientes y queda registro de la accion.
+1. The person edits general wellness goals or uploads a receipt image.
+2. The web product stores structured memory in D1 and receipt files in R2.
+3. Receipt images are sent through the private server route and secure AWS bridge to AgentCore.
+4. Amazon Nova Lite returns structured candidate items. Nothing enters the pantry until the person reviews and confirms the result.
+5. A question to the assistant sends the current profile, pantry, recipes, offers, and today's intake to the Strands agent.
+6. Strands selects the necessary domain tools and returns an answer or a confirmation request.
+7. When a cooked meal is confirmed, one transaction records calories, protein, carbohydrates, and fat while deducting exact ingredients from the oldest matching pantry batches.
+8. The refreshed state returns to the web UI and low-stock or expiry status is recalculated.
 
-## Por que es un agente y no solo una aplicacion
+## Agent tools
 
-El agente tiene memoria persistente, selecciona herramientas segun la intencion, combina varias fuentes y ejecuta trabajo de principio a fin. No se limita a conversar: consulta la despensa, compara compras, genera una recomendacion contextual y modifica stock solo despues de confirmacion.
+- `get_user_profile`: reads goals, location, activity, time, preferences, and target range.
+- `inspect_pantry`: reads stock, expiry priority, and low-stock items.
+- `get_daily_progress`: reads consumed and remaining calories, protein, carbohydrates, and fat.
+- `suggest_meals`: filters recipes by actual quantities, time, and requested protein.
+- `compare_nearby_shopping`: compares basket price plus round-trip transport cost.
+- `register_cooked_meal`: requests confirmation and emits an approved action only after it matches the person's explicit confirmation.
 
-## Herramientas Strands
+## Trust boundaries
 
-- `get_user_profile`: recupera objetivos y preferencias.
-- `get_pantry`: obtiene stock y prioridades de vencimiento.
-- `suggest_meals`: crea alternativas con restricciones y tiempo disponible.
-- `compare_shopping_options`: compara precio, distancia y transporte.
-- `register_cooked_meal`: descuenta ingredientes con confirmacion explicita.
+- The public browser never receives AWS credentials or the bridge bearer token.
+- The bridge IAM role can invoke only the configured AgentCore runtime.
+- Receipt text is treated as untrusted data; instructions printed inside a receipt are ignored.
+- Uploaded receipt candidates are editable and do not mutate pantry state automatically.
+- Pantry deductions are rejected when the required quantity is unavailable.
+- Duplicate food purchases remain separate batches so first-expiring stock can be consumed first.
+- Supermarket prices in the demo are fictional and labeled as such.
+- Nutrition calculations are general wellness references, not diagnosis or treatment.
 
-## Decisiones de seguridad
+## Continuity mode
 
-- Las metas nutricionales se presentan como orientativas.
-- No se diagnostican enfermedades ni se ajustan tratamientos.
-- Las acciones que cambian stock requieren confirmacion.
-- Los precios de la demo estan marcados como ficticios.
-- Nunca se incluyen secretos en codigo o archivos exportados.
-- Si Bedrock no responde, la interfaz utiliza una respuesta local limitada y segura.
+If AWS is temporarily unavailable, the web product keeps a narrow deterministic assistant for the public demo. It is labeled `demo-agent` and never pretends that a fallback answer came from Bedrock. Receipt fallback data is also labeled as demonstration data before confirmation.

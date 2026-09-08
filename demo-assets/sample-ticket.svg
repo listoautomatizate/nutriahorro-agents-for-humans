@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="1200" viewBox="0 0 760 1200">
+  <rect width="760" height="1200" fill="#f5f2e9"/>
+  <rect x="70" y="35" width="620" height="1130" rx="8" fill="#fff" stroke="#d8d4ca" stroke-width="3"/>
+  <g fill="#171717" font-family="Courier New, monospace">
+    <text x="380" y="105" font-size="42" font-weight="700" text-anchor="middle">TICKET DEMO</text>
+    <text x="380" y="150" font-size="24" text-anchor="middle">TA-TA MALDONADO</text>
+    <text x="380" y="188" font-size="19" text-anchor="middle">DATOS FICTICIOS - NO ES UNA COMPRA REAL</text>
+    <line x1="110" y1="225" x2="650" y2="225" stroke="#171717" stroke-width="2" stroke-dasharray="10 8"/>
+    <text x="110" y="275" font-size="22">08/09/2026</text>
+    <text x="650" y="275" font-size="22" text-anchor="end">15:30</text>
+    <text x="110" y="335" font-size="23" font-weight="700">PRODUCTO</text>
+    <text x="650" y="335" font-size="23" font-weight="700" text-anchor="end">IMPORTE</text>
+    <line x1="110" y1="360" x2="650" y2="360" stroke="#171717" stroke-width="2"/>
+    <text x="110" y="415" font-size="22">PECHUGA DE POLLO 0.800 KG</text>
+    <text x="650" y="415" font-size="22" text-anchor="end">$ 319</text>
+    <text x="110" y="475" font-size="22">ARROZ 1 KG</text>
+    <text x="650" y="475" font-size="22" text-anchor="end">$ 105</text>
+    <text x="110" y="535" font-size="22">HUEVOS 12 UNIDADES</text>
+    <text x="650" y="535" font-size="22" text-anchor="end">$ 219</text>
+    <text x="110" y="595" font-size="22">PALTA 3 UNIDADES</text>
+    <text x="650" y="595" font-size="22" text-anchor="end">$ 210</text>
+    <text x="110" y="655" font-size="22">TOMATE 1 KG</text>
+    <text x="650" y="655" font-size="22" text-anchor="end">$ 119</text>
+    <text x="110" y="715" font-size="22">ACEITE DE OLIVA 750 ML</text>
+    <text x="650" y="715" font-size="22" text-anchor="end">$ 349</text>
+    <line x1="110" y1="770" x2="650" y2="770" stroke="#171717" stroke-width="2" stroke-dasharray="10 8"/>
+    <text x="110" y="835" font-size="30" font-weight="700">TOTAL</text>
+    <text x="650" y="835" font-size="30" font-weight="700" text-anchor="end">$ 1.321</text>
+    <text x="110" y="895" font-size="21">FORMA DE PAGO: DEMOSTRACION</text>
+    <line x1="110" y1="940" x2="650" y2="940" stroke="#171717" stroke-width="2" stroke-dasharray="10 8"/>
+    <text x="380" y="1005" font-size="22" text-anchor="middle">Gracias por probar nutrIAhorro</text>
+    <text x="380" y="1045" font-size="18" text-anchor="middle">Archivo sintetico para evaluar lectura multimodal</text>
+  </g>
+  <g fill="#171717">
+    <rect x="150" y="1090" width="6" height="34"/>
+    <rect x="166" y="1090" width="3" height="34"/>
+    <rect x="178" y="1090" width="8" height="34"/>
+    <rect x="197" y="1090" width="4" height="34"/>
+    <rect x="212" y="1090" width="10" height="34"/>
+    <rect x="235" y="1090" width="5" height="34"/>
+    <rect x="253" y="1090" width="3" height="34"/>
+    <rect x="268" y="1090" width="9" height="34"/>
+    <rect x="289" y="1090" width="5" height="34"/>
+    <rect x="306" y="1090" width="11" height="34"/>
+    <rect x="333" y="1090" width="4" height="34"/>
+    <rect x="349" y="1090" width="7" height="34"/>
+    <rect x="369" y="1090" width="3" height="34"/>
+    <rect x="383" y="1090" width="10" height="34"/>
+    <rect x="408" y="1090" width="5" height="34"/>
+    <rect x="424" y="1090" width="8" height="34"/>
+    <rect x="445" y="1090" width="4" height="34"/>
+    <rect x="460" y="1090" width="11" height="34"/>
+    <rect x="485" y="1090" width="3" height="34"/>
+    <rect x="499" y="1090" width="9" height="34"/>
+    <rect x="522" y="1090" width="5" height="34"/>
+    <rect x="540" y="1090" width="7" height="34"/>
+    <rect x="559" y="1090" width="4" height="34"/>
+    <rect x="575" y="1090" width="10" height="34"/>
+    <rect x="599" y="1090" width="5" height="34"/>
+  </g>
+</svg>
