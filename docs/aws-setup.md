@@ -9,7 +9,7 @@ This guide keeps credentials out of the repository and minimizes paid runtime. U
 - The current AWS Free Plan includes Amazon Bedrock and Amazon Bedrock AgentCore, although a new account can still require account-level authorization. Do not change plans unless AWS Support explicitly confirms that it is necessary.
 - AWS Budgets and billing alarms are alerts, not a universal guaranteed hard stop.
 - This project uses Nova Lite, a 60-second idle timeout, a 15-minute maximum runtime lifetime, Lambda concurrency of two, short test prompts, and seven-day bridge log retention.
-- Create a conservative USD 5 monthly budget before deployment. Treat every notification as a reason to inspect usage immediately. Delete the bridge and AgentCore stacks after judging if they are no longer needed.
+- Create a conservative USD 5 monthly budget before deployment and review it before and after every AWS test. Add an email notification only through the private AWS console. Delete the bridge and AgentCore stacks after judging if they are no longer needed.
 - Never paste a promotional code, card, password, access key, or one-time code into source files, chat, screenshots, or the demo video.
 
 ## Prerequisites
@@ -20,6 +20,14 @@ This guide keeps credentials out of the repository and minimizes paid runtime. U
 4. An authenticated AWS CloudShell session.
 
 The project defaults to `us.amazon.nova-lite-v1:0` for both agent reasoning and receipt images.
+
+Before any deployment, run the read-only guardrail check. It stops if the AWS session, conservative budget, or Nova authorization is missing, and only performs a five-token model test after authorization succeeds:
+
+```bash
+AWS_PROFILE=nutriahorro ./scripts/aws-preflight.sh
+```
+
+Omit `AWS_PROFILE=nutriahorro` when running inside AWS CloudShell.
 
 ## Why CloudShell
 

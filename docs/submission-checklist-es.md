@@ -17,7 +17,7 @@
 - [x] Confirmacion previa para acciones que cambian datos.
 - [x] Entrada de AgentCore y manifiesto validado.
 - [x] Puente Lambda de minimo privilegio preparado.
-- [x] Configurar presupuesto y alertas.
+- [x] Configurar presupuesto preventivo de USD 5.
 - [ ] Canjear credito solo si resulta necesario.
 - [ ] Desplegar y probar AgentCore en `us-east-1`.
 - [ ] Conectar la web al agente real y repetir el recorrido completo.
