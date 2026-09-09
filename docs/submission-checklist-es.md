@@ -18,7 +18,7 @@
 - [x] Proveedor Bedrock configurable sin exponer credenciales.
 - [x] Adaptador demo que ejecuta el ciclo real de Strands sin llamadas pagas.
 - [x] Trece pruebas automaticas del agente, herramientas y confirmaciones.
-- [ ] Grabar la traza Strands y repetir el recorrido completo para el video.
+- [x] Grabar la traza Strands y repetir el recorrido completo para el video.
 
 ## Repositorio y materiales
 
@@ -35,10 +35,11 @@
 ## Presentacion
 
 - [ ] AWS Builder ID listo.
-- [ ] Video de menos de cinco minutos, publico en YouTube o Vimeo.
-- [ ] Problema, audiencia e impacto explicados.
-- [ ] Flujo real mostrado de punta a punta.
-- [ ] Demo, GitHub y video probados en ventana privada.
+- [x] Video final de 4:09 en Full HD y con voz en ingles.
+- [ ] Publicar el video en YouTube o Vimeo y pegar su enlace en Devpost.
+- [x] Problema, audiencia e impacto explicados.
+- [x] Flujo real mostrado de punta a punta.
+- [x] Demo y GitHub probados publicamente; comprobar el enlace del video despues de subirlo.
 - [ ] Integrantes correctos en Devpost.
 - [ ] Publicar antes del 14 de septiembre de 2026 a las 21:00 de Uruguay.
 - [ ] Lia revisa y confirma el envio final.

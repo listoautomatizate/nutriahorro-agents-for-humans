@@ -15,10 +15,10 @@ Source reviewed on September 8, 2026: [Agents for Humans Official Rules](https:/
 | Architecture diagram | `docs/architecture.svg` and `docs/architecture.md` | Ready |
 | English text description | `docs/devpost-submission.md` | Ready |
 | Working-project access for judging | Public live demo, free and without login | Ready |
-| Video, maximum five minutes | Must show the working product and pitch the problem, audience, and importance | Pending final edit and public upload |
+| Video, maximum five minutes | Final 4:09 Full HD cut shows the working product and pitches the problem, audience, and importance | Ready for public upload |
 | Video public on YouTube or Vimeo | Public URL must be added to Devpost | Pending upload |
 | AWS Builder ID | Must be entered in the Devpost submission | Pending account confirmation |
-| English materials or English translation | README, architecture, Devpost copy, and final video narration/subtitles in English | Ready except final video |
+| English materials or English translation | README, architecture, Devpost copy, and final video voiceover are in English | Ready |
 
 ## Optional items deliberately excluded
 
