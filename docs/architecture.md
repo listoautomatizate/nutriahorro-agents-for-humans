@@ -6,8 +6,8 @@
 
 1. The person edits general wellness goals or uploads a receipt image.
 2. The web product stores structured memory in D1 and receipt files in R2.
-3. Receipt images are sent through the private server route and secure AWS bridge to AgentCore.
-4. Amazon Nova Lite returns structured candidate items. Nothing enters the pantry until the person reviews and confirms the result.
+3. Receipt images enter a private server route that returns structured candidate items. Nothing enters the pantry until the person reviews and confirms the result.
+4. The receipt parser can use the configured private model provider; the public demo uses labeled sample candidates when no provider is connected.
 5. A question to the assistant sends the current profile, pantry, recipes, offers, and today's intake to the Strands agent.
 6. Strands selects the necessary domain tools and returns an answer or a confirmation request.
 7. When a cooked meal is confirmed, one transaction records calories, protein, carbohydrates, and fat while deducting exact ingredients from the oldest matching pantry batches.
@@ -24,8 +24,8 @@
 
 ## Trust boundaries
 
-- The public browser never receives AWS credentials or the bridge bearer token.
-- The bridge IAM role can invoke only the configured AgentCore runtime.
+- The public browser never receives model-provider credentials or server secrets.
+- Provider credentials remain server-side and are not committed to source control.
 - Receipt text is treated as untrusted data; instructions printed inside a receipt are ignored.
 - Uploaded receipt candidates are editable and do not mutate pantry state automatically.
 - Pantry deductions are rejected when the required quantity is unavailable.
@@ -35,4 +35,8 @@
 
 ## Continuity mode
 
-If AWS is temporarily unavailable, the web product keeps a narrow deterministic assistant for the public demo. It is labeled `demo-agent` and never pretends that a fallback answer came from Bedrock. Receipt fallback data is also labeled as demonstration data before confirmation.
+If a private model endpoint is unavailable, the web product keeps a narrow deterministic assistant for the public demo. It is labeled `demo-agent` and never pretends that a fallback answer came from a cloud model. Receipt fallback data is also labeled as demonstration data before confirmation.
+
+## Deployment scope
+
+The submitted runtime does not depend on AgentCore. The repository retains an optional AgentCore package as a future deployment path, but the live demo and eligibility do not claim or require it.

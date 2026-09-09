@@ -20,7 +20,7 @@ The current Maldonado demo uses clearly labeled fictional prices for El Dorado, 
 
 ## How we built it
 
-The agent is implemented with Strands Agents SDK and Amazon Bedrock and is packaged for Amazon Bedrock AgentCore Runtime. Its six tools retrieve the user profile, inspect the pantry, read daily nutrition progress, suggest feasible meals, compare shopping options, and register cooked meals after explicit confirmation. Multimodal receipt extraction uses Amazon Nova, while the web product uses React, vinext, D1 for persistent structured memory, and R2 for receipt files.
+The agent is implemented with Strands Agents SDK. Its six tools retrieve the user profile, inspect the pantry, read daily nutrition progress, suggest feasible meals, compare shopping options, and register cooked meals after explicit confirmation. The model layer is provider-configurable, with Amazon Bedrock as the primary configuration and an optional OpenAI provider supported by Strands. The public product uses React, vinext, D1 for persistent structured memory, and R2 for receipt files; when no private model endpoint is configured, it stays usable through an explicitly labeled deterministic continuity mode.
 
 ## Challenges
 
@@ -30,7 +30,7 @@ The hardest design problem was deciding when automation should act and when it s
 
 - A coherent end-to-end experience rather than a chat-only prototype.
 - Durable pantry memory with expiry and low-stock priorities.
-- Human-reviewed multimodal receipt extraction before pantry changes.
+- Human-reviewed receipt extraction before pantry changes.
 - Agent tools that complete real actions and update all connected state.
 - Contextual supermarket comparison that accounts for proximity.
 - Personalized goals connected to calories, protein, carbohydrates, fat, recipes, and pantry decisions.
@@ -46,8 +46,8 @@ We plan to add consent-based live supermarket catalogs, household profiles, conf
 
 ## Built with
 
-Strands Agents SDK, Amazon Bedrock, Amazon Nova Lite, React, vinext, Cloudflare D1, Cloudflare R2, TypeScript, Python, and FastAPI.
+Strands Agents SDK, React, vinext, Cloudflare D1, Cloudflare R2, TypeScript, Python, and FastAPI. Amazon Bedrock is the primary model configuration; OpenAI is an optional Strands provider.
 
 ## Disclosure
 
-The project was newly created during the hackathon period with standard open-source frameworks and AI-assisted development. All included supermarket prices and receipt contents are fictional demo data unless explicitly replaced by a cited current catalog.
+The project was newly created during the hackathon period with standard open-source frameworks and AI-assisted development. All included supermarket prices and receipt contents are fictional demo data unless explicitly replaced by a cited current catalog. AgentCore was evaluated as an optional deployment path but is not part of the submitted runtime and is not claimed as deployed.

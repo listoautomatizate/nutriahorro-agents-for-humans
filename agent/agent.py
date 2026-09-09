@@ -38,15 +38,37 @@ Reglas:
 """.strip()
 
 
-def build_agent(callback_handler=None) -> Agent:
-    model = BedrockModel(
+def selected_model_provider() -> str:
+    provider = os.getenv("NUTRIAHORRO_MODEL_PROVIDER", "bedrock").strip().lower()
+    if provider not in {"bedrock", "openai"}:
+        raise ValueError("NUTRIAHORRO_MODEL_PROVIDER debe ser 'bedrock' u 'openai'.")
+    return provider
+
+
+def build_model():
+    provider = selected_model_provider()
+    if provider == "openai":
+        from strands.models.openai import OpenAIModel
+
+        api_key = os.getenv("OPENAI_API_KEY")
+        if not api_key:
+            raise ValueError("Falta OPENAI_API_KEY para usar el proveedor OpenAI.")
+        return OpenAIModel(
+            client_args={"api_key": api_key},
+            model_id=os.getenv("OPENAI_MODEL_ID", "gpt-4.1-mini"),
+            params={"max_tokens": 900, "temperature": 0.2},
+        )
+    return BedrockModel(
         model_id=os.getenv("BEDROCK_MODEL_ID", "us.amazon.nova-lite-v1:0"),
         region_name=os.getenv("AWS_REGION", "us-east-1"),
         temperature=0.2,
         max_tokens=900,
     )
+
+
+def build_agent(callback_handler=None) -> Agent:
     return Agent(
-        model=model,
+        model=build_model(),
         system_prompt=SYSTEM_PROMPT,
         tools=[
             get_user_profile,
@@ -77,4 +99,9 @@ def ask(
     with invocation_context(state=state, confirmed_action=confirmed_action):
         response = build_agent(callback_handler=capture_tools)(message)
         actions = recorded_actions()
-    return {"answer": str(response), "mode": "strands-bedrock", "tools": used_tools, "actions": actions}
+    return {
+        "answer": str(response),
+        "mode": f"strands-{selected_model_provider()}",
+        "tools": used_tools,
+        "actions": actions,
+    }

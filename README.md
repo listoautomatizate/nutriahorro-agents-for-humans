@@ -10,7 +10,7 @@ nutrIAhorro was built for the **Everyday Agents** track of the **Agents for Huma
 
 ## What it does
 
-- Turns a receipt photo into editable pantry items using Amazon Bedrock multimodal understanding.
+- Turns a receipt photo into editable pantry candidates and requires review before saving them.
 - Requires human review before receipt results change persistent data.
 - Tracks separate pantry batches and consumes the oldest safe batch first.
 - Flags low stock and food that should be used soon.
@@ -41,11 +41,11 @@ It reads current structured memory, combines goals with stock and time, explains
 - **Web product:** React 19, vinext, and Cloudflare Workers.
 - **Structured memory:** Cloudflare D1 for profile, goals, pantry batches, recipes, offers, uploads, and meal entries.
 - **Receipt files:** Cloudflare R2.
-- **Agent:** Strands Agents SDK on Amazon Bedrock AgentCore Runtime.
-- **Model:** Amazon Nova Lite through Amazon Bedrock.
-- **Secure bridge:** a small AWS Lambda Function URL validates a server-side bearer token and invokes only the deployed AgentCore runtime.
+- **Agent:** Strands Agents SDK with six explicit nutrition, pantry, meal, and shopping tools.
+- **Model providers:** Amazon Bedrock is the primary configuration; OpenAI is an optional provider supported by Strands.
+- **Public continuity mode:** the hosted demo uses a clearly labeled deterministic assistant when no private model endpoint is configured.
 
-See [the architecture notes](docs/architecture.md) and [AWS deployment guide](docs/aws-setup.md).
+See [the architecture notes](docs/architecture.md). An optional, unused AgentCore deployment path remains documented in [the AWS guide](docs/aws-setup.md); AgentCore is not required by the hackathon and is not claimed as deployed.
 
 ## Demo data
 
@@ -64,7 +64,7 @@ Open `http://localhost:3000`.
 
 ## Run the Strands agent locally
 
-Requires Python 3.11 or later, an AWS account, and Amazon Bedrock access.
+Requires Python 3.11 or later and credentials for one configured model provider.
 
 ```bash
 cd agent
@@ -77,9 +77,17 @@ uvicorn api:app --reload --port 8000
 
 Set `NUTRIAHORRO_AGENT_URL=http://localhost:8000` only in the web app's private environment. AWS credentials belong in AWS roles or local credential storage, never in this repository.
 
-## Deploy to AgentCore
+Provider selection:
 
-The official AgentCore project is in `agentcore/agentcore.json`; the Runtime entrypoint is `agent/main.py`. Follow [docs/aws-setup.md](docs/aws-setup.md) from an authenticated AWS CloudShell to avoid long-lived access keys.
+```bash
+# Primary configuration
+NUTRIAHORRO_MODEL_PROVIDER=bedrock
+
+# Optional Strands provider
+NUTRIAHORRO_MODEL_PROVIDER=openai
+```
+
+No paid model call is required to run the automated test suite. AgentCore packaging is included only as an optional future deployment path and is outside the submitted runtime.
 
 ## Verification
 
@@ -88,12 +96,7 @@ pnpm lint
 pnpm build
 pnpm exec tsc --noEmit
 agent/.venv/bin/python agent/test_tools.py
-```
-
-The AgentCore manifest can be checked with:
-
-```bash
-agentcore validate --directory . --json
+agent/.venv/bin/python agent/test_models.py
 ```
 
 ## Submission material

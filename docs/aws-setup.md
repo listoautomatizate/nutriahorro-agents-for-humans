@@ -1,4 +1,6 @@
-# AWS and AgentCore deployment
+# Optional AWS and AgentCore deployment
+
+This guide is retained only as a future deployment path. AgentCore is optional under the hackathon rules, is outside the submitted runtime, and is not claimed as deployed. None of the steps below are required to run the public demo or the automated tests.
 
 This guide keeps credentials out of the repository and minimizes paid runtime. Use `us-east-1` consistently.
 

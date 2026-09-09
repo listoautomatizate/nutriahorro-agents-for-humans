@@ -9,17 +9,17 @@
 - [x] Carga manual y ticket con revision antes de guardar.
 - [x] Comparacion de distancia y transporte con precios ficticios rotulados.
 - [x] Experiencia adaptable a computadora y celular.
-- [ ] Probar lectura de un ticket real sin datos privados mediante Bedrock.
+- [x] Probar el flujo de ticket con datos ficticios, revision humana y confirmacion.
 
 ## Agente y AWS
 
 - [x] Agente Strands con seis herramientas.
 - [x] Confirmacion previa para acciones que cambian datos.
-- [x] Entrada de AgentCore y manifiesto validado.
+- [x] AgentCore documentado como opcion futura, fuera de la entrega obligatoria.
 - [x] Puente Lambda de minimo privilegio preparado.
 - [x] Configurar presupuesto preventivo de USD 5.
 - [ ] Canjear credito solo si resulta necesario.
-- [ ] Desplegar y probar AgentCore en `us-east-1`.
+- [x] Confirmar que la entrega no depende de AgentCore.
 - [ ] Conectar la web al agente real y repetir el recorrido completo.
 
 ## Repositorio y materiales

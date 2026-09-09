@@ -8,7 +8,7 @@ La demostracion publica incluye un control para restablecer sus datos ficticios.
 
 ## Secretos
 
-Las claves de AWS se guardan en el entorno local o mediante roles IAM. Nunca se incluyen en el repositorio, capturas, videos ni archivos de demostracion. El puente web protege su entrada con un token de servidor y su rol solo puede invocar el AgentCore Runtime especificado.
+Las claves de cualquier proveedor de modelos se guardan en el entorno privado del servidor o mediante roles. Nunca se incluyen en el repositorio, capturas, videos ni archivos de demostracion. La aplicacion publica no expone credenciales al navegador.
 
 ## Nutricion y alimentos
 

@@ -40,7 +40,7 @@ Abrir Compras y alternar caminando, bicicleta, auto y moto.
 
 Abrir el asistente y preguntar: "Que deberia usar primero y donde conviene comprar?"
 
-"La decision la toma un agente construido con Strands Agents SDK, Amazon Bedrock y AgentCore. Sus seis herramientas consultan perfil, despensa y progreso diario, proponen comidas, comparan compras y registran acciones solo despues de mi confirmacion."
+"La decision la toma un agente construido con Strands Agents SDK. Sus seis herramientas consultan perfil, despensa y progreso diario, proponen comidas, comparan compras y registran acciones solo despues de mi confirmacion. AgentCore era opcional y no forma parte de esta entrega."
 
 Mostrar brevemente el diagrama de arquitectura.
 

@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="760" viewBox="0 0 1200 760" role="img" aria-labelledby="title description">
   <title id="title">nutrIAhorro architecture</title>
-  <desc id="description">The web product stores pantry memory in Cloudflare, invokes a Strands agent through a secure AWS bridge, and uses Amazon Bedrock Nova Lite.</desc>
+  <desc id="description">The public web product stores pantry memory in Cloudflare and connects through a private API to a Strands agent with six domain tools.</desc>
   <defs>
     <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
       <path d="M0,0 L0,6 L9,3 z" fill="#496057"/>
@@ -17,7 +17,7 @@
   </defs>
   <rect width="1200" height="760" fill="#f7faf8"/>
   <text x="60" y="60" class="title">nutrIAhorro: confirmed decisions from receipt to meal</text>
-  <text x="60" y="88" class="subtitle">Everyday Agents track · Strands Agents SDK · Amazon Bedrock AgentCore</text>
+  <text x="60" y="88" class="subtitle">Everyday Agents track · Strands Agents SDK · Human-confirmed actions</text>
 
   <rect x="60" y="155" width="170" height="120" rx="8" fill="#ffffff" stroke="#b9c9c1" stroke-width="2"/>
   <circle cx="105" cy="205" r="23" fill="#176b4c"/>
@@ -35,18 +35,18 @@
   <text x="325" y="275" class="box-copy">Human confirmation controls</text>
 
   <rect x="635" y="155" width="210" height="120" rx="8" fill="#ffffff" stroke="#df5a4f" stroke-width="2"/>
-  <text x="662" y="195" class="box-title">Secure AWS bridge</text>
-  <text x="662" y="220" class="box-copy">Lambda Function URL</text>
-  <text x="662" y="241" class="box-copy">Private bearer token</text>
-  <text x="662" y="262" class="box-copy">Least-privilege IAM role</text>
+  <text x="662" y="195" class="box-title">Private agent API</text>
+  <text x="662" y="220" class="box-copy">FastAPI endpoint</text>
+  <text x="662" y="241" class="box-copy">Server-side credentials</text>
+  <text x="662" y="262" class="box-copy">Explicit action confirmation</text>
 
   <rect x="930" y="135" width="220" height="160" rx="8" fill="#fff8e8" stroke="#d7a532" stroke-width="3"/>
   <rect x="930" y="135" width="220" height="36" rx="8" fill="#cc8f13"/>
-  <text x="952" y="159" class="small">AWS AGENT RUNTIME</text>
-  <text x="958" y="205" class="box-title">AgentCore Runtime</text>
-  <text x="958" y="232" class="box-copy">Strands agent</text>
-  <text x="958" y="253" class="box-copy">Amazon Nova Lite</text>
-  <text x="958" y="275" class="box-copy">Bedrock multimodal model</text>
+  <text x="952" y="159" class="small">STRANDS AGENT</text>
+  <text x="958" y="205" class="box-title">Decision loop</text>
+  <text x="958" y="232" class="box-copy">Six explicit domain tools</text>
+  <text x="958" y="253" class="box-copy">Bedrock primary config</text>
+  <text x="958" y="275" class="box-copy">Optional model provider</text>
 
   <path d="M230 215 H290" class="flow"/>
   <path d="M550 215 H625" class="flow"/>
@@ -80,5 +80,5 @@
 
   <path d="M1040 295 V380" class="flow"/>
   <path d="M635 605 C590 605 575 550 550 505" class="return"/>
-  <text x="60" y="700" class="subtitle">Safety boundary: receipt results and pantry-changing actions require human confirmation. Demo prices are explicitly labeled fictional.</text>
+  <text x="60" y="700" class="subtitle">Safety boundary: receipt results and pantry-changing actions require human confirmation. AgentCore is not part of the submitted runtime.</text>
 </svg>

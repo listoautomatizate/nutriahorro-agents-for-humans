@@ -44,7 +44,7 @@ def chat(request: ChatRequest, authorization: str | None = Header(default=None))
     try:
         return ask(request.message, state=request.state, confirmed_action=request.confirmed_action)
     except Exception as error:
-        raise HTTPException(status_code=502, detail=f"Bedrock no respondio: {error}") from error
+        raise HTTPException(status_code=502, detail=f"El modelo del agente no respondio: {error}") from error
 
 
 @app.post("/receipt")
@@ -55,4 +55,4 @@ def receipt(request: ReceiptRequest, authorization: str | None = Header(default=
     except ValueError as error:
         raise HTTPException(status_code=400, detail=str(error)) from error
     except Exception as error:
-        raise HTTPException(status_code=502, detail=f"Bedrock no pudo leer el ticket: {error}") from error
+        raise HTTPException(status_code=502, detail=f"El modelo no pudo leer el ticket: {error}") from error

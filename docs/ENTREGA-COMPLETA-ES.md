@@ -6,7 +6,7 @@ Proyecto para **Agents for Humans Hackathon**, categoria **Everyday Agents**.
 
 - Cierre: **14 de septiembre de 2026 a las 17:00 PDT**, equivalente a las **21:00 de Uruguay**.
 - El agente debe estar construido con **Strands Agents SDK** y ejecutar trabajo real de punta a punta.
-- AgentCore no es obligatorio, pero fortalece la calificacion tecnica.
+- AgentCore es opcional y se deja fuera de esta entrega para concentrarnos en los requisitos obligatorios.
 - El repositorio debe ser publico, reproducible y tener README y licencia MIT o Apache visible.
 - Se exige diagrama de arquitectura.
 - El video debe ser publico en YouTube o Vimeo, durar como maximo cinco minutos y mostrar el producto funcionando.
@@ -43,24 +43,16 @@ nutrIAhorro no es una copia de una aplicacion de calorias. Es un agente cotidian
 - Rechazo de una comida si no existe cantidad suficiente.
 - Ticket en dos pasos: lectura y revision humana antes de guardar.
 - Agente Strands con seis herramientas y confirmacion de acciones.
-- Lectura multimodal de tickets preparada para Amazon Bedrock.
-- Manifiesto oficial de AgentCore validado.
-- Puente AWS de minimo privilegio preparado.
+- Lectura de tickets con revision humana y soporte preparado para proveedor multimodal privado.
+- Capa de modelo configurable para Strands, con Bedrock como opcion primaria y OpenAI como alternativa opcional.
 - D1, R2, modo demostracion, pruebas y documentacion.
 
-### Pendiente de una autorizacion externa de AWS
+### Pendiente para la presentacion
 
-- Canjear el credito promocional solo si es necesario.
-- Esperar que AWS Support retire la restriccion de cuenta que mantiene Nova en `NOT_AUTHORIZED`.
-- Repetir una invocacion minima de Bedrock y confirmar acceso al modelo.
-- Desplegar AgentCore y el puente AWS.
-- Conectar los dos secretos privados del alojamiento web.
-- Publicar la version de la demo conectada al agente real.
-- Ejecutar y guardar evidencia de las siete pruebas reales.
+- Publicar la ultima version del repositorio.
+- Ejecutar y guardar evidencia de las pruebas finales.
 - Grabar y publicar el video.
 - Completar y enviar Devpost.
-
-No se debe afirmar que AgentCore esta activo hasta que las pruebas reales pasen.
 
 ## Enlaces de la entrega
 
@@ -80,7 +72,7 @@ No se debe afirmar que AgentCore esta activo hasta que las pruebas reales pasen.
 6. Registrar la comida y mostrar, en una sola secuencia, el progreso diario y la cantidad descontada.
 7. Preguntar al agente por macros, alimento urgente y receta rapida; mostrar las herramientas consultadas.
 8. Comparar caminando y en auto, aclarando que los precios son ficticios.
-9. Mostrar brevemente arquitectura, Strands y AgentCore.
+9. Mostrar brevemente arquitectura, Strands y sus seis herramientas.
 
 ## Cuentas y datos que no se publican
 
@@ -93,11 +85,8 @@ No se debe afirmar que AgentCore esta activo hasta que las pruebas reales pasen.
 ## Control de costos
 
 - No crear recursos hasta tener una razon de prueba concreta.
-- Usar `us-east-1` y Amazon Nova Lite.
-- Mantener un presupuesto mensual preventivo de USD 5 y revisar cualquier alerta antes de continuar.
-- Limitar sesiones y concurrencia, y realizar prompts cortos.
-- Recordar que AWS Budgets alerta, pero no garantiza un corte universal.
-- No actualizar al Paid Plan. Detener cualquier despliegue que pueda superar los creditos disponibles.
+- AgentCore no se despliega y no genera costos para esta entrega.
+- Si se prueba Bedrock en el futuro, mantener el presupuesto preventivo de USD 5 y detener cualquier uso que pueda superar los creditos disponibles.
 
 ## Entrega final
 

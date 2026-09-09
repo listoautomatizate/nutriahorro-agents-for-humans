@@ -13,11 +13,11 @@ Los clips se guardan en una carpeta privada externa al proyecto y no se publican
 
 ## Clips probatorios del agente
 
-7. `05-agentcore-despliegue.mov`: Runtime activo y prueba de invocacion en AWS.
+7. `05-strands-herramientas.mov`: codigo del agente Strands y sus seis herramientas.
 8. `06-agente-herramientas.mov`: pregunta compleja y traza visible de herramientas Strands.
 9. `07-confirmacion-accion.mov`: propuesta de comida, confirmacion humana, registro nutricional y descuento de ingredientes.
-10. `08-ticket-nova.mov`: ticket leido por Amazon Nova desde el agente desplegado.
+10. `08-ticket-revision.mov`: ticket ficticio leido, corregido y confirmado por la persona.
 
 ## Regla de edicion
 
-El video final debe durar menos de cinco minutos y dedicar la mayor parte del tiempo a las pruebas reales de AgentCore. No mostrar correos, codigos promocionales, identificadores de cuenta, tokens, llaves ni datos personales.
+El video final debe durar menos de cinco minutos y dedicar la mayor parte del tiempo al agente Strands, sus herramientas y el flujo real del producto. No mostrar correos, codigos promocionales, identificadores de cuenta, tokens, llaves ni datos personales.

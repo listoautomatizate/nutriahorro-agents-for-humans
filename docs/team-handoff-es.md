@@ -7,7 +7,7 @@ El proyecto tecnico se mantiene completo en este repositorio. Lia y su hermano p
 - Producto web y base de datos.
 - Agente Strands y herramientas.
 - Lectura multimodal de tickets.
-- Configuracion de AgentCore.
+- Revision del agente Strands y sus seis herramientas.
 - Puente seguro hacia la web.
 - Arquitectura, pruebas, guion y texto de Devpost.
 
@@ -18,7 +18,7 @@ Lia valida la experiencia, el tono, las decisiones del agente y la narracion. Su
 Las acciones externas finales se realizan juntos:
 
 1. Revisar costos y autorizar el despliegue.
-2. Probar AgentCore y la web publica.
+2. Probar el agente Strands y la web publica.
 3. Grabar el video.
 4. Revisar los textos en ingles.
 5. Confirmar el envio definitivo en Devpost.

@@ -68,9 +68,34 @@ def _json_from_text(text: str) -> dict[str, Any]:
     return value
 
 
+def _parse_with_openai(data: str, content_type: str) -> dict[str, Any]:
+    from openai import OpenAI
+
+    api_key = os.getenv("OPENAI_API_KEY")
+    if not api_key:
+        raise ValueError("Falta OPENAI_API_KEY para leer el ticket con OpenAI.")
+    response = OpenAI(api_key=api_key).responses.create(
+        model=os.getenv("OPENAI_VISION_MODEL_ID", os.getenv("OPENAI_MODEL_ID", "gpt-4.1-mini")),
+        input=[{
+            "role": "user",
+            "content": [
+                {"type": "input_text", "text": RECEIPT_PROMPT},
+                {"type": "input_image", "image_url": f"data:{content_type};base64,{data}"},
+            ],
+        }],
+        max_output_tokens=1600,
+    )
+    return _json_from_text(response.output_text)
+
+
 def parse_receipt(data: str, content_type: str, filename: str) -> dict[str, Any]:
     image_bytes = _decode_image(data)
     image_format = _media_format(content_type, filename)
+    provider = os.getenv("NUTRIAHORRO_MODEL_PROVIDER", "bedrock").strip().lower()
+    if provider == "openai":
+        return _parse_with_openai(data, content_type)
+    if provider != "bedrock":
+        raise ValueError("NUTRIAHORRO_MODEL_PROVIDER debe ser 'bedrock' u 'openai'.")
     client = boto3.client("bedrock-runtime", region_name=os.getenv("AWS_REGION", "us-east-1"))
     response = client.converse(
         modelId=os.getenv("BEDROCK_VISION_MODEL_ID", os.getenv("BEDROCK_MODEL_ID", "us.amazon.nova-lite-v1:0")),
