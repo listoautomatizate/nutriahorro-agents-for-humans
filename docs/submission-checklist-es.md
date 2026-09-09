@@ -29,8 +29,8 @@
 - [x] README en ingles.
 - [x] Diagrama de arquitectura en SVG.
 - [x] Texto de Devpost en ingles.
-- [x] Guion de video.
-- [ ] Verificar que GitHub detecte la licencia en About.
+- [x] Guion de video en ingles y espanol.
+- [x] Verificar que GitHub detecte la licencia MIT.
 - [x] Guardar capturas sin correos, ID de cuenta ni secretos.
 
 ## Presentacion

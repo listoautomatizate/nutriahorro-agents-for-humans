@@ -102,7 +102,8 @@ agent/.venv/bin/python agent/test_models.py
 ## Submission material
 
 - [Master delivery guide in Spanish](docs/ENTREGA-COMPLETA-ES.md)
-- [Demo script](docs/demo-script-es.md)
+- [Demo script in English](docs/demo-script-en.md)
+- [Demo script in Spanish](docs/demo-script-es.md)
 - [Devpost copy](docs/devpost-submission.md)
 - [Final checklist](docs/submission-checklist-es.md)
 - [Privacy and safety](docs/security-privacy-es.md)
