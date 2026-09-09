@@ -1,5 +1,5 @@
 import { env } from 'cloudflare:workers';
-import { demoOffers, demoPantry, demoProfile, demoRecipes } from './demo-data';
+import { createDemoOffers, createDemoPantry, demoProfile, demoRecipes } from './demo-data';
 import type { AppState, MealEntry, NutrientTotals, Offer, PantryItem, Profile, Recipe } from './types';
 
 const statements = [
@@ -198,7 +198,10 @@ export async function ensureDatabase() {
   ]);
 
   const existing = await db.prepare('SELECT id FROM profiles WHERE id = ?').bind(demoProfile.id).first();
-  const now = new Date().toISOString();
+  const referenceDate = new Date();
+  const now = referenceDate.toISOString();
+  const currentDemoOffers = createDemoOffers(referenceDate);
+  const currentDemoPantry = createDemoPantry(referenceDate);
   if (existing) {
     await db.batch([
       db.prepare(`INSERT OR IGNORE INTO profile_goals (
@@ -217,7 +220,7 @@ export async function ensureDatabase() {
         recipe.id, recipe.name, recipe.description, recipe.prepMinutes, recipe.calories, recipe.protein,
         recipe.carbs, recipe.fat, recipe.priority, JSON.stringify(recipe.ingredients), JSON.stringify(recipe.steps),
       )),
-      ...demoOffers.map((offer) => db.prepare(`INSERT OR REPLACE INTO offers (
+      ...currentDemoOffers.map((offer) => db.prepare(`INSERT OR REPLACE INTO offers (
         id, supermarket, product, unit, price, regular_price, distance_km, valid_until
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`).bind(
         offer.id, offer.supermarket, offer.product, offer.unit, offer.price, offer.regularPrice,
@@ -240,7 +243,7 @@ export async function ensureDatabase() {
       dietary_preference, allergies, dislikes, updated_at
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
       .bind(demoProfile.id, demoProfile.age, demoProfile.metabolicReference, demoProfile.goalType, demoProfile.activityLevel, demoProfile.exerciseDaysPerWeek, demoProfile.exerciseMinutes, demoProfile.mealPrepMinutes, demoProfile.dietaryPreference, demoProfile.allergies, demoProfile.dislikes, now),
-    ...demoPantry.map((item) => db.prepare(`INSERT OR IGNORE INTO pantry_items (
+    ...currentDemoPantry.map((item) => db.prepare(`INSERT OR IGNORE INTO pantry_items (
       id, profile_id, name, category, quantity, unit, purchased_at, best_before, source, status
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
       .bind(item.id, demoProfile.id, item.name, item.category, item.quantity, item.unit, item.purchasedAt, item.bestBefore, item.source, item.status)),
@@ -248,7 +251,7 @@ export async function ensureDatabase() {
       id, name, description, prep_minutes, calories, protein, carbs, fat, priority, ingredients_json, steps_json
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
       .bind(recipe.id, recipe.name, recipe.description, recipe.prepMinutes, recipe.calories, recipe.protein, recipe.carbs, recipe.fat, recipe.priority, JSON.stringify(recipe.ingredients), JSON.stringify(recipe.steps))),
-    ...demoOffers.map((offer) => db.prepare(`INSERT OR REPLACE INTO offers (
+    ...currentDemoOffers.map((offer) => db.prepare(`INSERT OR REPLACE INTO offers (
       id, supermarket, product, unit, price, regular_price, distance_km, valid_until
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`)
       .bind(offer.id, offer.supermarket, offer.product, offer.unit, offer.price, offer.regularPrice, offer.distanceKm, offer.validUntil)),

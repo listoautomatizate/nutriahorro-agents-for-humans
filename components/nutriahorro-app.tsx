@@ -63,7 +63,7 @@ const initialState: AppState = {
   offers: demoOffers,
   cookedRecipeIds: [],
   dailyIntake: {
-    date: new Date().toISOString().slice(0, 10),
+    date: '2026-09-08',
     consumed: { calories: 0, protein: 0, carbs: 0, fat: 0 },
     remaining: {
       calories: demoProfile.calorieMin,
@@ -78,14 +78,23 @@ const initialState: AppState = {
 };
 
 const money = new Intl.NumberFormat('es-UY', { style: 'currency', currency: 'UYU', maximumFractionDigits: 0 });
-const shortDate = new Intl.DateTimeFormat('es-UY', { day: 'numeric', month: 'short' });
+const shortDate = new Intl.DateTimeFormat('es-UY', { day: 'numeric', month: 'short', timeZone: 'America/Montevideo' });
 const longDate = new Intl.DateTimeFormat('es-UY', {
   weekday: 'long',
   day: 'numeric',
   month: 'long',
   timeZone: 'America/Montevideo',
 });
-const defaultBestBefore = new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10);
+
+function relativeDateInput(daysFromNow: number) {
+  const date = new Date(Date.now() + daysFromNow * 86400000);
+  const parts = Object.fromEntries(
+    new Intl.DateTimeFormat('en-CA', {
+      year: 'numeric', month: '2-digit', day: '2-digit', timeZone: 'America/Montevideo',
+    }).formatToParts(date).map((part) => [part.type, part.value]),
+  );
+  return `${parts.year}-${parts.month}-${parts.day}`;
+}
 
 function daysUntil(date: string) {
   const dateFormatter = new Intl.DateTimeFormat('en-CA', {
@@ -592,6 +601,7 @@ function StoreSecondary({ option }: { option: ShoppingOption }) {
 
 function AddItemModal({ close, setState, notify }: { close: () => void; setState: (state: AppState) => void; notify: (text: string) => void }) {
   const [saving, setSaving] = useState(false);
+  const defaultBestBefore = relativeDateInput(7);
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault(); setSaving(true);
     const form = new FormData(event.currentTarget);

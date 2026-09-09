@@ -1,13 +1,13 @@
 import type { Offer, PantryItem, Profile, Recipe, TransportMode } from './types';
 
-const isoDay = (daysFromNow: number) => {
+const isoDay = (daysFromNow: number, referenceDate: Date) => {
   const parts = Object.fromEntries(
     new Intl.DateTimeFormat('en-CA', {
       year: 'numeric',
       month: '2-digit',
       day: '2-digit',
       timeZone: 'America/Montevideo',
-    }).formatToParts(new Date()).map((part) => [part.type, part.value]),
+    }).formatToParts(referenceDate).map((part) => [part.type, part.value]),
   );
   return new Date(Date.UTC(
     Number(parts.year),
@@ -16,6 +16,8 @@ const isoDay = (daysFromNow: number) => {
     15,
   )).toISOString();
 };
+
+const STATIC_DEMO_DATE = new Date('2026-09-08T15:00:00.000Z');
 
 export const demoProfile: Profile = {
   id: 'public-demo',
@@ -42,14 +44,16 @@ export const demoProfile: Profile = {
   transportMode: 'walking',
 };
 
-export const demoPantry: PantryItem[] = [
-  { id: 'pantry-chicken', name: 'Pechuga de pollo', category: 'Proteina', quantity: 800, unit: 'g', purchasedAt: isoDay(-1), bestBefore: isoDay(2), source: 'Ta-Ta', status: 'soon' },
-  { id: 'pantry-rice', name: 'Arroz', category: 'Carbohidrato', quantity: 1000, unit: 'g', purchasedAt: isoDay(-1), bestBefore: isoDay(180), source: 'Ta-Ta', status: 'ok' },
-  { id: 'pantry-eggs', name: 'Huevos', category: 'Proteina', quantity: 12, unit: 'unidades', purchasedAt: isoDay(-1), bestBefore: isoDay(20), source: 'Ta-Ta', status: 'ok' },
-  { id: 'pantry-avocado', name: 'Palta', category: 'Fruta', quantity: 3, unit: 'unidades', purchasedAt: isoDay(-1), bestBefore: isoDay(3), source: 'Ta-Ta', status: 'soon' },
-  { id: 'pantry-tomato', name: 'Tomate', category: 'Verdura', quantity: 1000, unit: 'g', purchasedAt: isoDay(-1), bestBefore: isoDay(2), source: 'Ta-Ta', status: 'soon' },
-  { id: 'pantry-oil', name: 'Aceite de oliva', category: 'Grasa', quantity: 750, unit: 'ml', purchasedAt: isoDay(-1), bestBefore: isoDay(240), source: 'Ta-Ta', status: 'ok' },
+export const createDemoPantry = (referenceDate = new Date()): PantryItem[] => [
+  { id: 'pantry-chicken', name: 'Pechuga de pollo', category: 'Proteina', quantity: 800, unit: 'g', purchasedAt: isoDay(-1, referenceDate), bestBefore: isoDay(2, referenceDate), source: 'Ta-Ta', status: 'soon' },
+  { id: 'pantry-rice', name: 'Arroz', category: 'Carbohidrato', quantity: 1000, unit: 'g', purchasedAt: isoDay(-1, referenceDate), bestBefore: isoDay(180, referenceDate), source: 'Ta-Ta', status: 'ok' },
+  { id: 'pantry-eggs', name: 'Huevos', category: 'Proteina', quantity: 12, unit: 'unidades', purchasedAt: isoDay(-1, referenceDate), bestBefore: isoDay(20, referenceDate), source: 'Ta-Ta', status: 'ok' },
+  { id: 'pantry-avocado', name: 'Palta', category: 'Fruta', quantity: 3, unit: 'unidades', purchasedAt: isoDay(-1, referenceDate), bestBefore: isoDay(3, referenceDate), source: 'Ta-Ta', status: 'soon' },
+  { id: 'pantry-tomato', name: 'Tomate', category: 'Verdura', quantity: 1000, unit: 'g', purchasedAt: isoDay(-1, referenceDate), bestBefore: isoDay(2, referenceDate), source: 'Ta-Ta', status: 'soon' },
+  { id: 'pantry-oil', name: 'Aceite de oliva', category: 'Grasa', quantity: 750, unit: 'ml', purchasedAt: isoDay(-1, referenceDate), bestBefore: isoDay(240, referenceDate), source: 'Ta-Ta', status: 'ok' },
 ];
+
+export const demoPantry = createDemoPantry(STATIC_DEMO_DATE);
 
 export const demoRecipes: Recipe[] = [
   {
@@ -145,17 +149,19 @@ export const demoRecipes: Recipe[] = [
   },
 ];
 
-export const demoOffers: Offer[] = [
-  { id: 'offer-ed-chicken', supermarket: 'El Dorado', product: 'Pechuga de pollo', unit: 'kg', price: 329, regularPrice: 399, distanceKm: 0.9, validUntil: isoDay(5) },
-  { id: 'offer-ed-eggs', supermarket: 'El Dorado', product: 'Huevos x12', unit: 'pack', price: 189, regularPrice: 219, distanceKm: 0.9, validUntil: isoDay(5) },
-  { id: 'offer-ed-rice', supermarket: 'El Dorado', product: 'Arroz 1 kg', unit: 'pack', price: 86, regularPrice: 105, distanceKm: 0.9, validUntil: isoDay(5) },
-  { id: 'offer-disco-chicken', supermarket: 'Disco', product: 'Pechuga de pollo', unit: 'kg', price: 359, regularPrice: 410, distanceKm: 2.4, validUntil: isoDay(4) },
-  { id: 'offer-disco-eggs', supermarket: 'Disco', product: 'Huevos x12', unit: 'pack', price: 205, regularPrice: 229, distanceKm: 2.4, validUntil: isoDay(4) },
-  { id: 'offer-disco-rice', supermarket: 'Disco', product: 'Arroz 1 kg', unit: 'pack', price: 94, regularPrice: 112, distanceKm: 2.4, validUntil: isoDay(4) },
-  { id: 'offer-tata-chicken', supermarket: 'Ta-Ta', product: 'Pechuga de pollo', unit: 'kg', price: 345, regularPrice: 399, distanceKm: 1.2, validUntil: isoDay(3) },
-  { id: 'offer-tata-eggs', supermarket: 'Ta-Ta', product: 'Huevos x12', unit: 'pack', price: 198, regularPrice: 220, distanceKm: 1.2, validUntil: isoDay(3) },
-  { id: 'offer-tienda-chicken', supermarket: 'Tienda Inglesa', product: 'Pechuga de pollo', unit: 'kg', price: 389, regularPrice: 425, distanceKm: 3.7, validUntil: isoDay(6) },
+export const createDemoOffers = (referenceDate = new Date()): Offer[] => [
+  { id: 'offer-ed-chicken', supermarket: 'El Dorado', product: 'Pechuga de pollo', unit: 'kg', price: 329, regularPrice: 399, distanceKm: 0.9, validUntil: isoDay(5, referenceDate) },
+  { id: 'offer-ed-eggs', supermarket: 'El Dorado', product: 'Huevos x12', unit: 'pack', price: 189, regularPrice: 219, distanceKm: 0.9, validUntil: isoDay(5, referenceDate) },
+  { id: 'offer-ed-rice', supermarket: 'El Dorado', product: 'Arroz 1 kg', unit: 'pack', price: 86, regularPrice: 105, distanceKm: 0.9, validUntil: isoDay(5, referenceDate) },
+  { id: 'offer-disco-chicken', supermarket: 'Disco', product: 'Pechuga de pollo', unit: 'kg', price: 359, regularPrice: 410, distanceKm: 2.4, validUntil: isoDay(4, referenceDate) },
+  { id: 'offer-disco-eggs', supermarket: 'Disco', product: 'Huevos x12', unit: 'pack', price: 205, regularPrice: 229, distanceKm: 2.4, validUntil: isoDay(4, referenceDate) },
+  { id: 'offer-disco-rice', supermarket: 'Disco', product: 'Arroz 1 kg', unit: 'pack', price: 94, regularPrice: 112, distanceKm: 2.4, validUntil: isoDay(4, referenceDate) },
+  { id: 'offer-tata-chicken', supermarket: 'Ta-Ta', product: 'Pechuga de pollo', unit: 'kg', price: 345, regularPrice: 399, distanceKm: 1.2, validUntil: isoDay(3, referenceDate) },
+  { id: 'offer-tata-eggs', supermarket: 'Ta-Ta', product: 'Huevos x12', unit: 'pack', price: 198, regularPrice: 220, distanceKm: 1.2, validUntil: isoDay(3, referenceDate) },
+  { id: 'offer-tienda-chicken', supermarket: 'Tienda Inglesa', product: 'Pechuga de pollo', unit: 'kg', price: 389, regularPrice: 425, distanceKm: 3.7, validUntil: isoDay(6, referenceDate) },
 ];
+
+export const demoOffers = createDemoOffers(STATIC_DEMO_DATE);
 
 export const transportConfig: Record<TransportMode, { speedKmh: number; costPerKm: number; label: string }> = {
   walking: { speedKmh: 5, costPerKm: 0, label: 'Caminando' },
@@ -164,7 +170,7 @@ export const transportConfig: Record<TransportMode, { speedKmh: number; costPerK
   motorcycle: { speedKmh: 30, costPerKm: 6, label: 'Moto' },
 };
 
-export const receiptDemoItems = demoPantry.map((item) => ({
+export const createReceiptDemoItems = (referenceDate = new Date()) => createDemoPantry(referenceDate).map((item) => ({
   ...item,
-  purchasedAt: new Date().toISOString(),
+  purchasedAt: referenceDate.toISOString(),
 }));

@@ -1,6 +1,6 @@
 import { getAppState, saveUpload, upsertPantryItem } from '@/lib/database';
 import { getAgentEnvironment } from '@/lib/agent-environment';
-import { receiptDemoItems } from '@/lib/demo-data';
+import { createReceiptDemoItems } from '@/lib/demo-data';
 import type { PantryItem } from '@/lib/types';
 
 const addDays = (days: number) => {
@@ -101,7 +101,7 @@ export async function POST(request: Request) {
     }
 
     return Response.json({
-      parsedItems: receiptDemoItems,
+      parsedItems: createReceiptDemoItems(),
       mode: 'demo',
       message: 'Use los datos de demostracion. Revisalos antes de guardarlos.',
     });
