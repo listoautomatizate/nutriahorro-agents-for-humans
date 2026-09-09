@@ -67,11 +67,24 @@ class ModelProviderTests(unittest.TestCase):
         self.assertEqual(result["mode"], "strands-demo")
         self.assertEqual(
             result["tools"],
-            ["inspect_pantry", "suggest_meals", "compare_nearby_shopping"],
+            ["get_user_profile", "inspect_pantry", "suggest_meals", "compare_nearby_shopping", "register_cooked_meal"],
         )
         self.assertIn("Pollo", result["answer"])
         self.assertIn("45 g de proteina", result["answer"])
         self.assertIn("El Dorado", result["answer"])
+        self.assertEqual(result["actions"][0]["status"], "confirmation_required")
+
+        confirmation = {"type": "cook_recipe", "recipe_id": "pollo-arroz"}
+        with patch.dict(os.environ, {"NUTRIAHORRO_MODEL_PROVIDER": "demo"}, clear=False):
+            confirmed = ask(
+                "Confirmo que cocine Pollo con arroz. Registrala ahora con recipe_id pollo-arroz y confirmed=true.",
+                state=state,
+                confirmed_action=confirmation,
+            )
+
+        self.assertEqual(confirmed["tools"], ["register_cooked_meal"])
+        self.assertEqual(confirmed["actions"][0]["status"], "approved")
+        self.assertIn("Registre Pollo con arroz", confirmed["answer"])
 
     def test_openai_provider_requires_a_key(self) -> None:
         with patch.dict(os.environ, {"NUTRIAHORRO_MODEL_PROVIDER": "openai"}, clear=False):

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 import threading
 from collections.abc import AsyncGenerator, AsyncIterable
 from typing import Any, TypeVar
@@ -60,14 +61,36 @@ class DemoModel(Model):
         **kwargs: Any,
     ) -> AsyncIterable[StreamEvent]:
         if _has_tool_results(messages):
+            payloads = _tool_payloads(messages)
+            latest_request = _latest_user_text(messages)
+            recipes = payloads.get("suggest_meals", [])
+            if (
+                isinstance(recipes, list)
+                and recipes
+                and "register_cooked_meal" not in payloads
+                and _contains(latest_request, "receta", "comer", "cocinar", "rapido", "minuto", "proteina")
+            ):
+                for event in _tool_call_events([(
+                    "register_cooked_meal",
+                    {"recipe_id": recipes[0]["id"], "confirmed": False},
+                )]):
+                    yield event
+                return
+
             for event in _text_events(_summarize_tool_results(messages)):
                 yield event
             return
 
         calls = _select_tools(_latest_user_text(messages))
-        yield {"messageStart": {"role": "assistant"}}
-        for index, (name, arguments) in enumerate(calls, start=1):
-            yield {
+        for event in _tool_call_events(calls):
+            yield event
+
+
+def _tool_call_events(calls: list[tuple[str, dict[str, Any]]]) -> list[StreamEvent]:
+    events: list[StreamEvent] = [{"messageStart": {"role": "assistant"}}]
+    for index, (name, arguments) in enumerate(calls, start=1):
+        events.extend([
+            {
                 "contentBlockStart": {
                     "start": {
                         "toolUse": {
@@ -76,15 +99,19 @@ class DemoModel(Model):
                         }
                     }
                 }
-            }
-            yield {
+            },
+            {
                 "contentBlockDelta": {
                     "delta": {"toolUse": {"input": json.dumps(arguments)}}
                 }
-            }
-            yield {"contentBlockStop": {}}
-        yield {"messageStop": {"stopReason": "tool_use"}}
-        yield _metadata_event()
+            },
+            {"contentBlockStop": {}},
+        ])
+    events.extend([
+        {"messageStop": {"stopReason": "tool_use"}},
+        _metadata_event(),
+    ])
+    return events
 
 
 def _latest_user_text(messages: Messages) -> str:
@@ -106,18 +133,32 @@ def _has_tool_results(messages: Messages) -> bool:
 
 
 def _select_tools(message: str) -> list[tuple[str, dict[str, Any]]]:
-    calls: list[tuple[str, dict[str, Any]]] = []
+    confirmation = re.search(r"recipe_id\s+([a-z0-9-]+).*confirmed\s*=\s*true", message)
+    if confirmation:
+        return [("register_cooked_meal", {"recipe_id": confirmation.group(1), "confirmed": True})]
 
-    if _contains(message, "perfil", "objetivo", "peso", "actividad"):
+    calls: list[tuple[str, dict[str, Any]]] = []
+    wants_recipe = _contains(message, "receta", "comer", "cocinar", "rapido", "minuto", "proteina")
+
+    if wants_recipe or _contains(message, "perfil", "objetivo", "peso", "actividad"):
         calls.append(("get_user_profile", {}))
     if _contains(message, "caloria", "proteina", "carbohidrato", "grasa", "macro", "progreso"):
         calls.append(("get_daily_progress", {}))
-    if _contains(message, "despensa", "heladera", "vencer", "vence", "primero", "stock"):
+    if wants_recipe or _contains(message, "despensa", "heladera", "vencer", "vence", "primero", "stock"):
         calls.append(("inspect_pantry", {"max_days_left": 4}))
-    if _contains(message, "receta", "comer", "cocinar", "rapido", "minuto", "proteina"):
-        calls.append(("suggest_meals", {"max_minutes": 20, "minimum_protein": 0}))
+    if wants_recipe:
+        minute_match = re.search(r"\b(\d{1,3})\s*(?:min|minuto|minutos)\b", message)
+        max_minutes = min(180, max(5, int(minute_match.group(1)))) if minute_match else 30
+        minimum_protein = 35 if _contains(message, "alto en proteina", "alta en proteina", "mas proteina") else 0
+        calls.append(("suggest_meals", {"max_minutes": max_minutes, "minimum_protein": minimum_protein}))
     if _contains(message, "comprar", "compra", "oferta", "ahorro", "supermercado", "conviene"):
-        calls.append(("compare_nearby_shopping", {"transport": "walking"}))
+        transport = (
+            "motorcycle" if _contains(message, "moto", "motocicleta")
+            else "car" if _contains(message, "auto", "coche")
+            else "bicycle" if _contains(message, "bicicleta", "bici")
+            else "walking"
+        )
+        calls.append(("compare_nearby_shopping", {"transport": transport}))
 
     if not calls:
         calls = [
@@ -155,19 +196,22 @@ def _tool_names(messages: Messages) -> dict[str, str]:
 def _tool_payloads(messages: Messages) -> dict[str, Any]:
     names = _tool_names(messages)
     payloads: dict[str, Any] = {}
-    for block in messages[-1]["content"]:
-        tool_result = block.get("toolResult")
-        if not tool_result:
+    for message in messages:
+        if message["role"] != "user":
             continue
-        tool_name = names.get(str(tool_result["toolUseId"]), "unknown")
-        for content in tool_result.get("content", []):
-            raw = content.get("text")
-            if raw is None:
+        for block in message["content"]:
+            tool_result = block.get("toolResult")
+            if not tool_result:
                 continue
-            try:
-                payloads[tool_name] = json.loads(raw)
-            except (TypeError, json.JSONDecodeError):
-                payloads[tool_name] = raw
+            tool_name = names.get(str(tool_result["toolUseId"]), "unknown")
+            for content in tool_result.get("content", []):
+                raw = content.get("text")
+                if raw is None:
+                    continue
+                try:
+                    payloads[tool_name] = json.loads(raw)
+                except (TypeError, json.JSONDecodeError):
+                    payloads[tool_name] = raw
     return payloads
 
 
@@ -214,6 +258,15 @@ def _summarize_tool_results(messages: Messages) -> str:
             f"Tu objetivo configurado es {profile.get('goal', 'sin definir')} con un rango orientativo "
             f"de {profile.get('calorie_range', ['?', '?'])[0]} a "
             f"{profile.get('calorie_range', ['?', '?'])[1]} kcal."
+        )
+
+    registration = payloads.get("register_cooked_meal", {})
+    if isinstance(registration, dict) and registration.get("confirmation_required"):
+        paragraphs.append("Puedo registrarla y actualizar tu ingesta y tu despensa, pero necesito tu confirmacion antes de hacerlo.")
+    elif isinstance(registration, dict) and registration.get("registered"):
+        paragraphs.append(
+            f"Listo. Registre {registration.get('recipe', 'la comida')}; la aplicacion actualizara calorias, "
+            "proteina, carbohidratos, grasas y las cantidades de la despensa."
         )
 
     return " ".join(paragraphs) or "Consulte las herramientas de nutrIAhorro, pero no encontre datos para responder."
