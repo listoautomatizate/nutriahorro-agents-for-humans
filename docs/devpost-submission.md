@@ -20,7 +20,7 @@ The current Maldonado demo uses clearly labeled fictional prices for El Dorado, 
 
 ## How we built it
 
-The agent is implemented with Strands Agents SDK. Its six tools retrieve the user profile, inspect the pantry, read daily nutrition progress, suggest feasible meals, compare shopping options, and register cooked meals after explicit confirmation. The model layer is provider-configurable, with Amazon Bedrock as the primary configuration and an optional OpenAI provider supported by Strands. The public product uses React, vinext, D1 for persistent structured memory, and R2 for receipt files; when no private model endpoint is configured, it stays usable through an explicitly labeled deterministic continuity mode.
+The agent is implemented with Strands Agents SDK. Its six tools retrieve the user profile, inspect the pantry, read daily nutrition progress, suggest feasible meals, compare shopping options, and register cooked meals after explicit confirmation. The model layer is provider-configurable, with Amazon Bedrock as the primary AI configuration and an optional OpenAI provider supported by Strands. A deterministic demo adapter exercises the real Strands tool loop without external model calls and is explicitly labeled as non-generative. The public product uses React, vinext, D1 for persistent structured memory, and R2 for receipt files; when no private model endpoint is configured, it stays usable through an explicitly labeled deterministic continuity mode.
 
 ## Challenges
 
@@ -50,4 +50,4 @@ Strands Agents SDK, React, vinext, Cloudflare D1, Cloudflare R2, TypeScript, Pyt
 
 ## Disclosure
 
-The project was newly created during the hackathon period with standard open-source frameworks and AI-assisted development. All included supermarket prices and receipt contents are fictional demo data unless explicitly replaced by a cited current catalog. AgentCore was evaluated as an optional deployment path but is not part of the submitted runtime and is not claimed as deployed.
+The project was newly created during the hackathon period with standard open-source frameworks and AI coding assistance, as allowed by the rules. All included supermarket prices and receipt contents are fictional demo data unless explicitly replaced by a cited current catalog. AWS promotional credits and AgentCore are optional and are not used or claimed by this submission.

@@ -40,13 +40,17 @@ Reglas:
 
 def selected_model_provider() -> str:
     provider = os.getenv("NUTRIAHORRO_MODEL_PROVIDER", "bedrock").strip().lower()
-    if provider not in {"bedrock", "openai"}:
-        raise ValueError("NUTRIAHORRO_MODEL_PROVIDER debe ser 'bedrock' u 'openai'.")
+    if provider not in {"bedrock", "openai", "demo"}:
+        raise ValueError("NUTRIAHORRO_MODEL_PROVIDER debe ser 'bedrock', 'openai' o 'demo'.")
     return provider
 
 
 def build_model():
     provider = selected_model_provider()
+    if provider == "demo":
+        from demo_model import DemoModel
+
+        return DemoModel()
     if provider == "openai":
         from strands.models.openai import OpenAIModel
 

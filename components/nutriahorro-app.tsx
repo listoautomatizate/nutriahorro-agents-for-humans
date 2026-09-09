@@ -79,11 +79,33 @@ const initialState: AppState = {
 
 const money = new Intl.NumberFormat('es-UY', { style: 'currency', currency: 'UYU', maximumFractionDigits: 0 });
 const shortDate = new Intl.DateTimeFormat('es-UY', { day: 'numeric', month: 'short' });
-const longDate = new Intl.DateTimeFormat('es-UY', { weekday: 'long', day: 'numeric', month: 'long' });
+const longDate = new Intl.DateTimeFormat('es-UY', {
+  weekday: 'long',
+  day: 'numeric',
+  month: 'long',
+  timeZone: 'America/Montevideo',
+});
 const defaultBestBefore = new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10);
 
 function daysUntil(date: string) {
-  return Math.ceil((new Date(date).getTime() - Date.now()) / 86400000);
+  const dateFormatter = new Intl.DateTimeFormat('en-CA', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    timeZone: 'America/Montevideo',
+  });
+  const asUtcDay = (value: Date) => {
+    const parts = Object.fromEntries(
+      dateFormatter.formatToParts(value).map((part) => [part.type, part.value]),
+    );
+    const year = Number(parts.year);
+    const month = Number(parts.month);
+    const day = Number(parts.day);
+    return Date.UTC(year, month - 1, day);
+  };
+  const expiryDay = asUtcDay(new Date(date));
+  const today = asUtcDay(new Date());
+  return Math.round((expiryDay - today) / 86400000);
 }
 
 function shoppingOptions(state: AppState, mode: TransportMode): ShoppingOption[] {
@@ -616,7 +638,7 @@ function RecipeModal({ recipe, close, cook, busy }: { recipe: Recipe; close: () 
 
 function ChatDrawer({ messages, input, setInput, send, close, busy }: { messages: ChatMessage[]; input: string; setInput: (value: string) => void; send: (value?: string, confirmedAction?: AgentAction) => void; close: () => void; busy: boolean }) {
   const quick = ['¿Como voy con mis macros?', '¿Que uso primero?', 'Necesito algo rapido'];
-  return <div className="drawer-backdrop" onMouseDown={(event) => event.target === event.currentTarget && close()}><aside className="chat-drawer"><header><div><span><Leaf size={19} /></span><div><strong>Agente nutrIAhorro</strong><small>Activo con memoria de tu despensa</small></div></div><button className="row-icon-button" onClick={close} title="Cerrar" type="button"><X size={20} /></button></header><div className="chat-body">{messages.map((item, index) => <div className={`chat-message ${item.role}`} key={`${item.role}-${index}`}><span>{item.text}</span>{item.role === 'agent' && item.tools?.length ? <small className="tool-trace"><Sparkles size={11} /> Consulto: {item.tools.join(', ')}</small> : null}{item.role === 'agent' && item.action ? <button className="chat-action-button" disabled={busy} onClick={() => send(`Confirmo que cocine ${item.action?.recipe_name}. Registrala ahora con recipe_id ${item.action?.recipe_id} y confirmed=true.`, item.action)} type="button"><Check size={15} /> Confirmar comida</button> : null}</div>)}{busy && <div className="chat-message agent typing"><span /><span /><span /></div>}</div><div className="quick-prompts">{quick.map((item) => <button key={item} onClick={() => send(item)} type="button">{item}</button>)}</div><form className="chat-form" onSubmit={(event) => { event.preventDefault(); send(); }}><input value={input} onChange={(event) => setInput(event.target.value)} placeholder="Preguntale algo" /><button disabled={!input.trim() || busy} title="Enviar" type="submit"><Send size={18} /></button></form></aside></div>;
+  return <div className="drawer-backdrop" onMouseDown={(event) => event.target === event.currentTarget && close()}><aside className="chat-drawer"><header><div><span><Leaf size={19} /></span><div><strong>Agente nutrIAhorro</strong><small>Activo con memoria de tu despensa</small></div></div><button className="row-icon-button" onClick={close} title="Cerrar" type="button"><X size={20} /></button></header><div className="chat-body">{messages.map((item, index) => <div className={`chat-message ${item.role}`} key={`${item.role}-${index}`}><span>{item.text}</span>{item.role === 'agent' && item.tools?.length ? <small className="tool-trace"><Sparkles size={11} /> {item.mode === 'strands-demo' ? 'Strands demo' : 'Modo local'} · Consulto: {item.tools.join(', ')}</small> : null}{item.role === 'agent' && item.action ? <button className="chat-action-button" disabled={busy} onClick={() => send(`Confirmo que cocine ${item.action?.recipe_name}. Registrala ahora con recipe_id ${item.action?.recipe_id} y confirmed=true.`, item.action)} type="button"><Check size={15} /> Confirmar comida</button> : null}</div>)}{busy && <div className="chat-message agent typing"><span /><span /><span /></div>}</div><div className="quick-prompts">{quick.map((item) => <button key={item} onClick={() => send(item)} type="button">{item}</button>)}</div><form className="chat-form" onSubmit={(event) => { event.preventDefault(); send(); }}><input value={input} onChange={(event) => setInput(event.target.value)} placeholder="Preguntale algo" /><button disabled={!input.trim() || busy} title="Enviar" type="submit"><Send size={18} /></button></form></aside></div>;
 }
 
 function ModalShell({ title, close, children, wide = false }: { title: string; close: () => void; children: React.ReactNode; wide?: boolean }) {

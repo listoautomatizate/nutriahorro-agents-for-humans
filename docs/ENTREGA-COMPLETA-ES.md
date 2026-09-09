@@ -6,7 +6,7 @@ Proyecto para **Agents for Humans Hackathon**, categoria **Everyday Agents**.
 
 - Cierre: **14 de septiembre de 2026 a las 17:00 PDT**, equivalente a las **21:00 de Uruguay**.
 - El agente debe estar construido con **Strands Agents SDK** y ejecutar trabajo real de punta a punta.
-- AgentCore es opcional y se deja fuera de esta entrega para concentrarnos en los requisitos obligatorios.
+- AgentCore y los creditos promocionales son opcionales y no se usan en esta entrega.
 - El repositorio debe ser publico, reproducible y tener README y licencia MIT o Apache visible.
 - Se exige diagrama de arquitectura.
 - El video debe ser publico en YouTube o Vimeo, durar como maximo cinco minutos y mostrar el producto funcionando.
@@ -45,11 +45,11 @@ nutrIAhorro no es una copia de una aplicacion de calorias. Es un agente cotidian
 - Agente Strands con seis herramientas y confirmacion de acciones.
 - Lectura de tickets con revision humana y soporte preparado para proveedor multimodal privado.
 - Capa de modelo configurable para Strands, con Bedrock como opcion primaria y OpenAI como alternativa opcional.
+- Adaptador demostrativo determinista que recorre el ciclo real de Strands y sus herramientas sin una llamada paga.
 - D1, R2, modo demostracion, pruebas y documentacion.
 
 ### Pendiente para la presentacion
 
-- Publicar la ultima version del repositorio.
 - Ejecutar y guardar evidencia de las pruebas finales.
 - Grabar y publicar el video.
 - Completar y enviar Devpost.
@@ -82,11 +82,9 @@ nutrIAhorro no es una copia de una aplicacion de calorias. Es un agente cotidian
 - Tickets reales con datos identificables.
 - El token privado entre la web y Lambda.
 
-## Control de costos
+## Por que no se canjearon los creditos
 
-- No crear recursos hasta tener una razon de prueba concreta.
-- AgentCore no se despliega y no genera costos para esta entrega.
-- Si se prueba Bedrock en el futuro, mantener el presupuesto preventivo de USD 5 y detener cualquier uso que pueda superar los creditos disponibles.
+Las reglas permiten solicitar creditos promocionales, pero no obligan a usarlos. El agente, las pruebas y la demo se ejecutan sin AgentCore y sin llamadas pagas. No canjearlos evita crear recursos innecesarios y no afecta la elegibilidad: el requisito tecnico es Strands Agents SDK, que ya esta implementado y probado.
 
 ## Entrega final
 

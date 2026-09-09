@@ -1,4 +1,5 @@
 import { cookRecipe, getAppState } from '@/lib/database';
+import { getAgentEnvironment } from '@/lib/agent-environment';
 
 const contains = (text: string, words: string[]) => words.some((word) => text.includes(word));
 
@@ -10,14 +11,14 @@ export async function POST(request: Request) {
     const message = originalMessage.toLowerCase();
     const state = await getAppState();
 
-    const agentUrl = process.env.NUTRIAHORRO_AGENT_URL?.replace(/\/$/, '');
+    const { url: agentUrl, token: agentToken } = getAgentEnvironment();
     if (agentUrl) {
       try {
         const response = await fetch(`${agentUrl}/chat`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            ...(process.env.NUTRIAHORRO_AGENT_TOKEN ? { Authorization: `Bearer ${process.env.NUTRIAHORRO_AGENT_TOKEN}` } : {}),
+            ...(agentToken ? { Authorization: `Bearer ${agentToken}` } : {}),
           },
           body: JSON.stringify({ message: originalMessage, state, confirmedAction: body.confirmedAction }),
           signal: AbortSignal.timeout(25_000),

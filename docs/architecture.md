@@ -9,7 +9,7 @@
 3. Receipt images enter a private server route that returns structured candidate items. Nothing enters the pantry until the person reviews and confirms the result.
 4. The receipt parser can use the configured private model provider; the public demo uses labeled sample candidates when no provider is connected.
 5. A question to the assistant sends the current profile, pantry, recipes, offers, and today's intake to the Strands agent.
-6. Strands selects the necessary domain tools and returns an answer or a confirmation request.
+6. Strands selects the necessary domain tools through a configured AI model, or through the explicitly labeled deterministic demo adapter used for zero-cost verification.
 7. When a cooked meal is confirmed, one transaction records calories, protein, carbohydrates, and fat while deducting exact ingredients from the oldest matching pantry batches.
 8. The refreshed state returns to the web UI and low-stock or expiry status is recalculated.
 
@@ -37,6 +37,10 @@
 
 If a private model endpoint is unavailable, the web product keeps a narrow deterministic assistant for the public demo. It is labeled `demo-agent` and never pretends that a fallback answer came from a cloud model. Receipt fallback data is also labeled as demonstration data before confirmation.
 
+## Zero-cost Strands verification
+
+`NUTRIAHORRO_MODEL_PROVIDER=demo` runs the genuine Strands event loop, selects the domain tools, executes them against the request state, and returns their result without contacting a paid model. This adapter is deterministic and is not presented as a generative AI model. Amazon Bedrock and OpenAI remain supported private AI providers.
+
 ## Deployment scope
 
-The submitted runtime does not depend on AgentCore. The repository retains an optional AgentCore package as a future deployment path, but the live demo and eligibility do not claim or require it.
+The submitted runtime does not use or depend on AgentCore. AWS promotional credits are not needed to install, test, or judge the project.

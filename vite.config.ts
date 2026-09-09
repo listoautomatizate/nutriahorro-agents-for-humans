@@ -9,12 +9,18 @@ const SITE_CREATOR_PLACEHOLDER_DATABASE_ID =
 
 const { d1, r2 } = hostingConfig;
 
-// macOS Seatbelt blocks FSEvents, so Codex previews need polling for HMR.
-const isCodexSeatbeltSandbox = process.env.CODEX_SANDBOX === 'seatbelt';
+// Restricted macOS sandboxes need polling because FSEvents is unavailable.
+const needsPolling = process.env.CODEX_SANDBOX === 'seatbelt';
+
+const localVars: Record<string, string> = {};
+if (process.env.NUTRIAHORRO_AGENT_URL) {
+  localVars.NUTRIAHORRO_AGENT_URL = process.env.NUTRIAHORRO_AGENT_URL;
+}
 
 const localBindingConfig = {
   main: 'vinext/server/app-router-entry',
   compatibility_flags: ['nodejs_compat'],
+  vars: localVars,
   d1_databases: d1
     ? [
         {
@@ -46,7 +52,7 @@ export default defineConfig(async () => {
 
   return {
     css: { postcss: { plugins: [tailwindcss()] } },
-    server: isCodexSeatbeltSandbox
+    server: needsPolling
       ? { watch: { useFsEvents: false, usePolling: true } }
       : undefined,
     plugins: [

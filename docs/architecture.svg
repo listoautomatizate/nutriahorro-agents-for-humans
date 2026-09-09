@@ -80,5 +80,5 @@
 
   <path d="M1040 295 V380" class="flow"/>
   <path d="M635 605 C590 605 575 550 550 505" class="return"/>
-  <text x="60" y="700" class="subtitle">Safety boundary: receipt results and pantry-changing actions require human confirmation. AgentCore is not part of the submitted runtime.</text>
+  <text x="60" y="700" class="subtitle">Safety boundary: receipt results and pantry-changing actions require human confirmation.</text>
 </svg>

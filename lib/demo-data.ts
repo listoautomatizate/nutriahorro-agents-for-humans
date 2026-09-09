@@ -1,10 +1,20 @@
 import type { Offer, PantryItem, Profile, Recipe, TransportMode } from './types';
 
 const isoDay = (daysFromNow: number) => {
-  const date = new Date();
-  date.setHours(12, 0, 0, 0);
-  date.setDate(date.getDate() + daysFromNow);
-  return date.toISOString();
+  const parts = Object.fromEntries(
+    new Intl.DateTimeFormat('en-CA', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      timeZone: 'America/Montevideo',
+    }).formatToParts(new Date()).map((part) => [part.type, part.value]),
+  );
+  return new Date(Date.UTC(
+    Number(parts.year),
+    Number(parts.month) - 1,
+    Number(parts.day) + daysFromNow,
+    15,
+  )).toISOString();
 };
 
 export const demoProfile: Profile = {

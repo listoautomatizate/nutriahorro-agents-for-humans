@@ -1,49 +1,55 @@
-# Guion de video, duracion maxima 5 minutos
+# Narracion final y plan de tomas, duracion objetivo: 4 minutos 35 segundos
 
-## 0:00 a 0:35 - El problema
+## 0:00 a 0:28 - Una decision, no otro tablero
 
-"Compramos comida, olvidamos lo que ya tenemos, dejamos vencer productos y muchas veces elegimos una oferta sin considerar la distancia. nutrIAhorro es un agente cotidiano que une nutricion, despensa y ahorro para convertir esos datos en decisiones simples dentro de una sola experiencia."
+"A las seis de la tarde, la pregunta casi nunca es solamente que deberia comer. Es: que tengo en casa, que se vence primero, que encaja con mis objetivos, cuanto tiempo tengo y si esa oferta sigue siendo barata despues del traslado. nutrIAhorro convierte toda esa decision en una respuesta practica."
 
-Mostrar la pantalla Hoy con prioridades, macros y ahorro.
+Mostrar Hoy: prioridades, las cuatro metricas nutricionales y el ahorro contextual. Restablecer antes la demo ficticia.
 
-Antes de grabar, usar **Restablecer demo** para comenzar con la despensa y el progreso diario originales.
+## 0:28 a 0:58 - Construido alrededor de una persona real
 
-## 0:35 a 1:15 - Objetivos personales
+"Este agente cotidiano empieza por el contexto, no por suposiciones. La persona elige un objetivo general de bienestar, actividad, ejercicio, tiempo para cocinar, preferencias y transporte. nutrIAhorro convierte esas elecciones en referencias editables de calorias, proteina, carbohidratos y grasas. Son orientativas; nunca diagnostico ni tratamiento medico."
 
-Abrir Objetivos y mostrar meta, peso, actividad, ejercicio, tiempo y preferencias.
+Abrir Objetivos y mostrar los campos relevantes y las cuatro referencias calculadas.
 
-"El plan parte del contexto real de la persona. Los objetivos se transforman en una referencia orientativa de calorias y macronutrientes, sin sustituir asesoramiento profesional."
+## 0:58 a 1:42 - Del ticket a una memoria confiable
 
-## 1:15 a 2:00 - Memoria de despensa
+"Una foto del ticket se transforma en productos estructurados, pero el agente nunca modifica la despensa en silencio. Puedo corregir una cantidad, eliminar un error y confirmar la compra. Recién entonces pasa a ser memoria persistente. Los lotes separados conservan el orden de compra, para señalar poco stock y priorizar primero los alimentos seguros mas antiguos."
 
-Subir el ticket de prueba y abrir Despensa.
+Subir el ticket ficticio, editar un producto, confirmar y abrir Despensa. Mostrar pollo, tomate y palta como prioridades.
 
-"El ticket se guarda y la compra se transforma en una despensa persistente. El agente identifica productos con poco stock o proximos a vencer y aplica la logica de consumir primero lo mas antiguo."
+"Toda esta demostracion usa contenido de ticket y precios ficticios."
 
-Mostrar pollo, tomate y palta como prioritarios. Aclarar que el ejemplo usa datos ficticios.
+## 1:42 a 2:37 - Una accion confirmada, todo sincronizado
 
-## 2:00 a 2:50 - Comidas utiles
+"Ahora el agente combina las cantidades disponibles con el tiempo y el objetivo de la persona. Una sugerencia util tiene que poder cocinarse de verdad. Cada receta muestra calorias, proteina, carbohidratos y grasas; no un solo macro aislado."
 
-Abrir Recetas, filtrar por tiempo y entrar a una receta.
+Abrir Recetas, elegir el filtro rapido y mostrar las cuatro metricas.
 
-"nutrIAhorro combina el perfil, el tiempo disponible y los ingredientes reales. Cada receta muestra calorias, proteinas, carbohidratos y grasas. Cuando confirmo que cocine, registra esas cuatro metricas y descuenta las cantidades exactas de la despensa."
+"Cuando confirmo que cocine, una sola operacion registra las cuatro metricas y descuenta las cantidades exactas de los lotes mas antiguos. Si no hay stock suficiente, la accion se rechaza. Aca el progreso diario y la despensa se actualizan juntos."
 
-Marcar una receta como cocinada. Mostrar el progreso actualizado en Hoy y volver a la despensa para comprobar el descuento.
+Confirmar la comida, mostrar Hoy y volver a Despensa para comprobar el descuento.
 
-## 2:50 a 3:40 - Ahorro con contexto
+## 2:37 a 3:12 - El costo real de una oferta
 
-Abrir Compras y alternar caminando, bicicleta, auto y moto.
+"Una compra inteligente tambien necesita contexto. nutrIAhorro compara canastas cercanas y suma el costo de ida y vuelta para caminar, bicicleta, auto o moto. El precio mas bajo en la gondola no es automaticamente la mejor decision. Aca gana la opcion cercana con menor costo efectivo. Son precios rotulados de demostracion, no promociones en vivo."
 
-"La oferta mas barata no siempre es la compra mas conveniente. El agente suma distancia y costo de traslado. En este caso recomienda El Dorado porque la canasta de prueba sigue siendo la mejor opcion cercana."
+Abrir Compras y alternar transportes para que cambie el costo efectivo.
 
-## 3:40 a 4:40 - Agente Strands
+## 3:12 a 4:14 - El ciclo de decision Strands
 
-Abrir el asistente y preguntar: "Que deberia usar primero y donde conviene comprar?"
+Preguntar: "Que deberia usar primero, que puedo cocinar en veinte minutos y donde conviene comprar?"
 
-"La decision la toma un agente construido con Strands Agents SDK. Sus seis herramientas consultan perfil, despensa y progreso diario, proponen comidas, comparan compras y registran acciones solo despues de mi confirmacion. AgentCore era opcional y no forma parte de esta entrega."
+"Aca el producto se convierte en agente. La capa de decision esta construida con Strands Agents SDK. Para una sola consulta, Strands selecciona las herramientas de despensa, recetas y compra, las ejecuta sobre la memoria estructurada actual y une los resultados en una respuesta."
 
-Mostrar brevemente el diagrama de arquitectura.
+Mostrar la traza visible `strands-demo` y las tres herramientas elegidas.
 
-## 4:40 a 5:00 - Impacto
+"El mismo agente expone seis herramientas: perfil, despensa, progreso diario, sugerencias, comparacion de compras y registro confirmado de comidas. Esta verificacion usa nuestro modelo demostrativo determinista, rotulado expresamente, para que el ciclo real de Strands sea reproducible sin costo externo. La capa de proveedores tambien admite Amazon Bedrock para un despliegue con IA. La confirmacion humana sigue siendo el limite antes de cambiar la despensa."
 
-"nutrIAhorro ayuda a familias y personas con poco tiempo a comer con mas conciencia, desperdiciar menos y cuidar su presupuesto. No sustituye profesionales de salud; transforma tareas repetitivas en decisiones cotidianas mas faciles."
+Mostrar brevemente arquitectura y las seis herramientas en el repositorio publico.
+
+## 4:14 a 4:35 - Por que importa
+
+"nutrIAhorro es para personas y hogares con poco tiempo que quieren comer con mas conciencia sin convertir su dia en una planilla. Les ayuda a desperdiciar menos, cuidar su presupuesto y tomar una mejor decision por vez. Eso es un agente para humanos: contexto util, accion real y el control siempre en manos de la persona."
+
+Cerrar con la demo publica, GitHub y la categoria Everyday Agents.

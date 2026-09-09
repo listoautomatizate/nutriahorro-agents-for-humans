@@ -11,16 +11,14 @@
 - [x] Experiencia adaptable a computadora y celular.
 - [x] Probar el flujo de ticket con datos ficticios, revision humana y confirmacion.
 
-## Agente y AWS
+## Agente Strands
 
 - [x] Agente Strands con seis herramientas.
 - [x] Confirmacion previa para acciones que cambian datos.
-- [x] AgentCore documentado como opcion futura, fuera de la entrega obligatoria.
-- [x] Puente Lambda de minimo privilegio preparado.
-- [x] Configurar presupuesto preventivo de USD 5.
-- [ ] Canjear credito solo si resulta necesario.
-- [x] Confirmar que la entrega no depende de AgentCore.
-- [ ] Conectar la web al agente real y repetir el recorrido completo.
+- [x] Proveedor Bedrock configurable sin exponer credenciales.
+- [x] Adaptador demo que ejecuta el ciclo real de Strands sin llamadas pagas.
+- [x] Trece pruebas automaticas del agente, herramientas y confirmaciones.
+- [ ] Grabar la traza Strands y repetir el recorrido completo para el video.
 
 ## Repositorio y materiales
 
@@ -32,6 +30,7 @@
 - [x] Guion de video en ingles y espanol.
 - [x] Verificar que GitHub detecte la licencia MIT.
 - [x] Guardar capturas sin correos, ID de cuenta ni secretos.
+- [x] Matriz de cumplimiento de reglas oficiales.
 
 ## Presentacion
 
@@ -43,3 +42,9 @@
 - [ ] Integrantes correctos en Devpost.
 - [ ] Publicar antes del 14 de septiembre de 2026 a las 21:00 de Uruguay.
 - [ ] Lia revisa y confirma el envio final.
+
+## Opcionales omitidos conscientemente
+
+- [x] AgentCore no se usa ni se presenta como desplegado.
+- [x] Los creditos promocionales de AWS no se canjean porque no son necesarios.
+- [x] El blog de Builder no forma parte de la entrega principal.

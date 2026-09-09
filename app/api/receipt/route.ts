@@ -1,4 +1,5 @@
 import { getAppState, saveUpload, upsertPantryItem } from '@/lib/database';
+import { getAgentEnvironment } from '@/lib/agent-environment';
 import { receiptDemoItems } from '@/lib/demo-data';
 import type { PantryItem } from '@/lib/types';
 
@@ -71,14 +72,14 @@ export async function POST(request: Request) {
     const objectKey = `receipts/${Date.now()}-${safeName}`;
     await saveUpload(file, objectKey);
 
-    const agentUrl = process.env.NUTRIAHORRO_AGENT_URL?.replace(/\/$/, '');
+    const { url: agentUrl, token: agentToken } = getAgentEnvironment();
     if (agentUrl) {
       try {
         const response = await fetch(`${agentUrl}/receipt`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            ...(process.env.NUTRIAHORRO_AGENT_TOKEN ? { Authorization: `Bearer ${process.env.NUTRIAHORRO_AGENT_TOKEN}` } : {}),
+            ...(agentToken ? { Authorization: `Bearer ${agentToken}` } : {}),
           },
           body: JSON.stringify({ filename: file.name, contentType: file.type, data: toBase64(await file.arrayBuffer()) }),
           signal: AbortSignal.timeout(25_000),

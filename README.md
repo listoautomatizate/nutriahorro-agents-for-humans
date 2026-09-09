@@ -19,7 +19,7 @@ nutrIAhorro was built for the **Everyday Agents** track of the **Agents for Huma
 - Registers a cooked meal only after confirmation, updates all four daily totals, and deducts exact ingredient quantities.
 - Suggests meals that fit available stock, preparation time, and protein preference.
 - Compares demo grocery baskets with round-trip walking, bicycle, car, or motorcycle cost.
-- Keeps working in an explicitly labeled deterministic demo mode if AWS is unavailable.
+- Keeps working in an explicitly labeled deterministic continuity mode if a private model endpoint is unavailable.
 
 The Maldonado example uses fictional prices for El Dorado, Ta-Ta, Disco, and Tienda Inglesa. It does not claim live promotions. Nutrition references are general wellness information and do not replace professional care.
 
@@ -42,10 +42,11 @@ It reads current structured memory, combines goals with stock and time, explains
 - **Structured memory:** Cloudflare D1 for profile, goals, pantry batches, recipes, offers, uploads, and meal entries.
 - **Receipt files:** Cloudflare R2.
 - **Agent:** Strands Agents SDK with six explicit nutrition, pantry, meal, and shopping tools.
-- **Model providers:** Amazon Bedrock is the primary configuration; OpenAI is an optional provider supported by Strands.
+- **Model providers:** Amazon Bedrock is the primary AI configuration; OpenAI is an optional provider supported by Strands.
+- **Zero-cost Strands proof:** a deterministic demo adapter exercises the real Strands tool-selection loop without an external model call. It is explicitly identified as a demo model.
 - **Public continuity mode:** the hosted demo uses a clearly labeled deterministic assistant when no private model endpoint is configured.
 
-See [the architecture notes](docs/architecture.md). An optional, unused AgentCore deployment path remains documented in [the AWS guide](docs/aws-setup.md); AgentCore is not required by the hackathon and is not claimed as deployed.
+See [the architecture notes](docs/architecture.md) and the [official-requirements matrix](docs/rules-compliance.md).
 
 ## Demo data
 
@@ -62,9 +63,9 @@ pnpm dev
 
 Open `http://localhost:3000`.
 
-## Run the Strands agent locally
+## Run the Strands agent locally at zero cost
 
-Requires Python 3.11 or later and credentials for one configured model provider.
+Requires Python 3.11 or later. The demo provider executes the actual Strands event loop and domain tools without credentials or network calls.
 
 ```bash
 cd agent
@@ -72,6 +73,7 @@ python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 cp .env.example .env
+export NUTRIAHORRO_MODEL_PROVIDER=demo
 uvicorn api:app --reload --port 8000
 ```
 
@@ -80,14 +82,17 @@ Set `NUTRIAHORRO_AGENT_URL=http://localhost:8000` only in the web app's private 
 Provider selection:
 
 ```bash
-# Primary configuration
+# Zero-cost deterministic Strands demonstration (not a generative model)
+NUTRIAHORRO_MODEL_PROVIDER=demo
+
+# Primary AI configuration
 NUTRIAHORRO_MODEL_PROVIDER=bedrock
 
 # Optional Strands provider
 NUTRIAHORRO_MODEL_PROVIDER=openai
 ```
 
-No paid model call is required to run the automated test suite. AgentCore packaging is included only as an optional future deployment path and is outside the submitted runtime.
+No paid model call is required to run the automated test suite or the deterministic Strands demonstration. AWS promotional credits and AgentCore are optional under the rules and are not used by this submission.
 
 ## Verification
 
@@ -95,8 +100,7 @@ No paid model call is required to run the automated test suite. AgentCore packag
 pnpm lint
 pnpm build
 pnpm exec tsc --noEmit
-agent/.venv/bin/python agent/test_tools.py
-agent/.venv/bin/python agent/test_models.py
+agent/.venv/bin/python -m unittest discover -s agent -p 'test_*.py' -v
 ```
 
 ## Submission material
@@ -107,6 +111,10 @@ agent/.venv/bin/python agent/test_models.py
 - [Devpost copy](docs/devpost-submission.md)
 - [Final checklist](docs/submission-checklist-es.md)
 - [Privacy and safety](docs/security-privacy-es.md)
+
+## Development disclosure
+
+The product concept, scope, decisions, testing, and submission belong to the nutrIAhorro team. Standard open-source frameworks and AI coding assistance were used during implementation, as permitted by the hackathon rules. No pre-existing proprietary product code was incorporated.
 
 ## License
 
