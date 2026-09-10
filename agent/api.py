@@ -30,7 +30,7 @@ class ReceiptRequest(BaseModel):
 def require_token(authorization: str | None) -> None:
     expected = os.getenv("NUTRIAHORRO_AGENT_TOKEN")
     if expected and authorization != f"Bearer {expected}":
-        raise HTTPException(status_code=401, detail="Token invalido.")
+        raise HTTPException(status_code=401, detail="Invalid token.")
 
 
 @app.get("/health")
@@ -44,7 +44,7 @@ def chat(request: ChatRequest, authorization: str | None = Header(default=None))
     try:
         return ask(request.message, state=request.state, confirmed_action=request.confirmed_action)
     except Exception as error:
-        raise HTTPException(status_code=502, detail=f"El modelo del agente no respondio: {error}") from error
+        raise HTTPException(status_code=502, detail=f"The agent model did not respond: {error}") from error
 
 
 @app.post("/receipt")
@@ -55,4 +55,4 @@ def receipt(request: ReceiptRequest, authorization: str | None = Header(default=
     except ValueError as error:
         raise HTTPException(status_code=400, detail=str(error)) from error
     except Exception as error:
-        raise HTTPException(status_code=502, detail=f"El modelo no pudo leer el ticket: {error}") from error
+        raise HTTPException(status_code=502, detail=f"The model could not read the receipt: {error}") from error

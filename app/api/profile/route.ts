@@ -26,24 +26,24 @@ export async function POST(request: Request) {
       exerciseDaysPerWeek: Number(body.exerciseDaysPerWeek),
       exerciseMinutes: Number(body.exerciseMinutes),
       mealPrepMinutes: Number(body.mealPrepMinutes),
-      dietaryPreference: String(body.dietaryPreference ?? 'Sin preferencia').trim(),
+      dietaryPreference: String(body.dietaryPreference ?? 'No preference').trim(),
       allergies: String(body.allergies ?? '').trim(),
       dislikes: String(body.dislikes ?? '').trim(),
     };
 
-    if (!profile.name || !profile.city) return Response.json({ error: 'Completa tu nombre y ciudad.' }, { status: 400 });
-    if (!inRange(profile.age, 18, 100)) return Response.json({ error: 'La edad debe estar entre 18 y 100 anos.' }, { status: 400 });
-    if (!inRange(profile.heightCm, 120, 230)) return Response.json({ error: 'Revisa la altura ingresada.' }, { status: 400 });
-    if (!inRange(profile.currentWeightKg, 35, 300) || !inRange(profile.goalWeightKg, 35, 300)) return Response.json({ error: 'Revisa el peso actual y el objetivo.' }, { status: 400 });
-    if (!goals.includes(profile.goalType) || !activityLevels.includes(profile.activityLevel) || !metabolicReferences.includes(profile.metabolicReference)) return Response.json({ error: 'Selecciona opciones validas para calcular tu objetivo.' }, { status: 400 });
-    if (!inRange(profile.exerciseDaysPerWeek, 0, 7) || !inRange(profile.exerciseMinutes, 0, 300) || !inRange(profile.mealPrepMinutes, 5, 180)) return Response.json({ error: 'Revisa el tiempo de ejercicio y cocina.' }, { status: 400 });
-    if (profile.goalType === 'lose_fat' && profile.goalWeightKg >= profile.currentWeightKg) return Response.json({ error: 'Para perder grasa, el peso objetivo debe ser menor al actual.' }, { status: 400 });
-    if (profile.goalType === 'gain_muscle' && profile.goalWeightKg <= profile.currentWeightKg) return Response.json({ error: 'Para ganar masa, el peso objetivo debe ser mayor al actual.' }, { status: 400 });
+    if (!profile.name || !profile.city) return Response.json({ error: 'Enter your name and city.' }, { status: 400 });
+    if (!inRange(profile.age, 18, 100)) return Response.json({ error: 'Age must be between 18 and 100.' }, { status: 400 });
+    if (!inRange(profile.heightCm, 120, 230)) return Response.json({ error: 'Check the height you entered.' }, { status: 400 });
+    if (!inRange(profile.currentWeightKg, 35, 300) || !inRange(profile.goalWeightKg, 35, 300)) return Response.json({ error: 'Check your current and goal weights.' }, { status: 400 });
+    if (!goals.includes(profile.goalType) || !activityLevels.includes(profile.activityLevel) || !metabolicReferences.includes(profile.metabolicReference)) return Response.json({ error: 'Select valid options to calculate your targets.' }, { status: 400 });
+    if (!inRange(profile.exerciseDaysPerWeek, 0, 7) || !inRange(profile.exerciseMinutes, 0, 300) || !inRange(profile.mealPrepMinutes, 5, 180)) return Response.json({ error: 'Check your exercise and cooking time.' }, { status: 400 });
+    if (profile.goalType === 'lose_fat' && profile.goalWeightKg >= profile.currentWeightKg) return Response.json({ error: 'For a fat-loss goal, your goal weight must be below your current weight.' }, { status: 400 });
+    if (profile.goalType === 'gain_muscle' && profile.goalWeightKg <= profile.currentWeightKg) return Response.json({ error: 'For a muscle-gain goal, your goal weight must be above your current weight.' }, { status: 400 });
 
     Object.assign(profile, calculateNutritionTargets(profile));
     await updateProfile(profile);
     return Response.json(await getAppState());
   } catch (error) {
-    return Response.json({ error: error instanceof Error ? error.message : 'No se pudieron guardar tus objetivos.' }, { status: 500 });
+    return Response.json({ error: error instanceof Error ? error.message : 'Your goals could not be saved.' }, { status: 500 });
   }
 }

@@ -13,7 +13,7 @@ class ToolTests(unittest.TestCase):
     def test_pantry_prioritizes_fresh_food(self) -> None:
         result = json.loads(inspect_pantry(max_days_left=3))
         names = {item["name"] for item in result["priority"]}
-        self.assertEqual(names, {"Pechuga de pollo", "Palta", "Tomate"})
+        self.assertEqual(names, {"Chicken breast", "Avocado", "Tomato"})
 
     def test_meal_filter_obeys_time(self) -> None:
         result = json.loads(suggest_meals(max_minutes=15))
@@ -21,7 +21,7 @@ class ToolTests(unittest.TestCase):
 
     def test_meal_filter_rejects_insufficient_stock(self) -> None:
         state = deepcopy(store.read())
-        next(item for item in state["pantry"] if item["name"] == "Huevos")["quantity"] = 1
+        next(item for item in state["pantry"] if item["name"] == "Eggs")["quantity"] = 1
         with invocation_context(state=state):
             result = json.loads(suggest_meals(max_minutes=15))
         self.assertEqual(result, [])
@@ -75,7 +75,7 @@ class ToolTests(unittest.TestCase):
             _media_format("application/pdf", "ticket.pdf")
 
     def test_receipt_json_requires_an_item_list(self) -> None:
-        parsed = _json_from_text('Texto previo {"merchant":"Ta-Ta","items":[]} texto final')
+        parsed = _json_from_text('Leading text {"merchant":"Ta-Ta","items":[]} trailing text')
         self.assertEqual(parsed["merchant"], "Ta-Ta")
         with self.assertRaises(ValueError):
             _json_from_text('{"merchant":"Ta-Ta"}')

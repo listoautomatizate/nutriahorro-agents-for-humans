@@ -22,10 +22,10 @@ from store import store
 
 
 TRANSPORT = {
-    "walking": {"label": "caminando", "speed": 5, "cost_km": 0},
-    "bicycle": {"label": "bicicleta", "speed": 14, "cost_km": 0},
-    "car": {"label": "auto", "speed": 32, "cost_km": 14},
-    "motorcycle": {"label": "moto", "speed": 30, "cost_km": 6},
+    "walking": {"label": "walking", "speed": 5, "cost_km": 0},
+    "bicycle": {"label": "bicycle", "speed": 14, "cost_km": 0},
+    "car": {"label": "car", "speed": 32, "cost_km": 14},
+    "motorcycle": {"label": "motorcycle", "speed": 30, "cost_km": 6},
 }
 
 
@@ -104,7 +104,7 @@ def inspect_pantry(max_days_left: int = 4) -> str:
     priority = [item for item in pantry if item["days_left"] <= max_days_left]
     low_stock = [
         item for item in pantry
-        if item["quantity"] <= (2 if item.get("unit") == "unidades" else 150)
+        if item["quantity"] <= (2 if item.get("unit") == "units" else 150)
     ]
     return _json({"pantry": pantry, "priority": priority, "low_stock": low_stock})
 
@@ -211,7 +211,7 @@ def compare_nearby_shopping(transport: str = "walking") -> str:
 
 def _compare_nearby_shopping_data(transport: str) -> dict[str, Any]:
     if transport not in TRANSPORT:
-        return {"error": "Transporte no disponible", "allowed": list(TRANSPORT)}
+        return {"error": "Transportation mode unavailable", "allowed": list(TRANSPORT)}
     config = TRANSPORT[transport]
     data = current_state()
     options = []
@@ -228,7 +228,7 @@ def _compare_nearby_shopping_data(transport: str) -> dict[str, Any]:
         })
     options.sort(key=lambda option: option["effective_cost"])
     if not options:
-        return {"error": "No hay supermercados cargados para comparar", "comparison": []}
+        return {"error": "No supermarkets are available to compare", "comparison": []}
     return {"best": options[0], "comparison": options, "prices_are_demo": True, "currency": "UYU"}
 
 
@@ -259,7 +259,7 @@ def register_cooked_meal(recipe_id: str, confirmed: bool = False) -> str:
     data = current_state()
     recipe = next((item for item in data["recipes"] if item["id"] == recipe_id), None)
     if not recipe:
-        return _json({"error": "Receta no encontrada"})
+        return _json({"error": "Recipe not found"})
 
     confirmation = current_confirmation()
     explicitly_confirmed = bool(
@@ -273,11 +273,11 @@ def register_cooked_meal(recipe_id: str, confirmed: bool = False) -> str:
         record_action({**action, "status": "confirmation_required"})
         return _json({
             "confirmation_required": True,
-            "message": "La persona debe confirmar esta accion en la interfaz.",
+            "message": "The user must confirm this action in the interface.",
             "action": action,
         })
     if not confirmed:
-        return _json({"confirmation_required": True, "message": "Confirma que cocinaste la receta antes de descontar alimentos."})
+        return _json({"confirmation_required": True, "message": "Confirm that you cooked the recipe before pantry items are deducted."})
 
     if is_remote_state():
         action = {"type": "cook_recipe", "recipe_id": recipe_id, "recipe_name": recipe["name"], "status": "approved"}

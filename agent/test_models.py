@@ -19,12 +19,12 @@ class ModelProviderTests(unittest.TestCase):
                 "heightCm": 177,
                 "currentWeightKg": 66,
                 "goalWeightKg": 60,
-                "goalType": "perder grasa",
-                "activityLevel": "moderada",
+                "goalType": "lose_fat",
+                "activityLevel": "moderate",
                 "exerciseDaysPerWeek": 3,
                 "exerciseMinutes": 60,
                 "mealPrepMinutes": 20,
-                "dietaryPreference": "omnivora",
+                "dietaryPreference": "omnivore",
                 "allergies": [],
                 "dislikes": [],
                 "calorieMin": 1500,
@@ -35,18 +35,18 @@ class ModelProviderTests(unittest.TestCase):
                 "transportMode": "walking",
             },
             "pantry": [
-                {"name": "Pollo", "quantity": 500, "unit": "g", "days_left": 2},
-                {"name": "Arroz", "quantity": 1000, "unit": "g", "days_left": 90},
+                {"name": "Chicken", "quantity": 500, "unit": "g", "days_left": 2},
+                {"name": "Rice", "quantity": 1000, "unit": "g", "days_left": 90},
             ],
             "recipes": [{
-                "id": "pollo-arroz",
-                "name": "Pollo con arroz",
+                "id": "chicken-rice",
+                "name": "Chicken with rice",
                 "minutes": 20,
                 "calories": 510,
                 "protein": 45,
                 "carbs": 52,
                 "fat": 12,
-                "uses": ["Pollo", "Arroz"],
+                "uses": ["Chicken", "Rice"],
             }],
             "shopping": [{
                 "supermarket": "El Dorado",
@@ -60,7 +60,7 @@ class ModelProviderTests(unittest.TestCase):
         with patch.dict(os.environ, {"NUTRIAHORRO_MODEL_PROVIDER": "demo"}, clear=False):
             self.assertIsInstance(build_model(), DemoModel)
             result = ask(
-                "Que tengo que usar primero, que receta rapida puedo hacer y donde conviene comprar?",
+                "What should I use first, what quick recipe can I make, and where should I shop?",
                 state=state,
             )
 
@@ -69,22 +69,22 @@ class ModelProviderTests(unittest.TestCase):
             result["tools"],
             ["get_user_profile", "inspect_pantry", "suggest_meals", "compare_nearby_shopping", "register_cooked_meal"],
         )
-        self.assertIn("Pollo", result["answer"])
-        self.assertIn("45 g de proteina", result["answer"])
+        self.assertIn("Chicken", result["answer"])
+        self.assertIn("45 g of protein", result["answer"])
         self.assertIn("El Dorado", result["answer"])
         self.assertEqual(result["actions"][0]["status"], "confirmation_required")
 
-        confirmation = {"type": "cook_recipe", "recipe_id": "pollo-arroz"}
+        confirmation = {"type": "cook_recipe", "recipe_id": "chicken-rice"}
         with patch.dict(os.environ, {"NUTRIAHORRO_MODEL_PROVIDER": "demo"}, clear=False):
             confirmed = ask(
-                "Confirmo que cocine Pollo con arroz. Registrala ahora con recipe_id pollo-arroz y confirmed=true.",
+                "I confirm that I cooked Chicken with rice. Log it now with recipe_id chicken-rice and confirmed=true.",
                 state=state,
                 confirmed_action=confirmation,
             )
 
         self.assertEqual(confirmed["tools"], ["register_cooked_meal"])
         self.assertEqual(confirmed["actions"][0]["status"], "approved")
-        self.assertIn("Registre Pollo con arroz", confirmed["answer"])
+        self.assertIn("logged Chicken with rice", confirmed["answer"])
 
     def test_openai_provider_requires_a_key(self) -> None:
         with patch.dict(os.environ, {"NUTRIAHORRO_MODEL_PROVIDER": "openai"}, clear=False):
@@ -95,7 +95,7 @@ class ModelProviderTests(unittest.TestCase):
 
     def test_openai_receipt_parser_returns_structured_items(self) -> None:
         encoded = base64.b64encode(b"small-image").decode("ascii")
-        output = '{"merchant":"Ta-Ta","purchase_date":null,"items":[{"name":"Arroz","quantity":1,"unit":"kg","category":"Carbohidrato","best_before_days":120,"confidence":0.98}],"warnings":[]}'
+        output = '{"merchant":"Ta-Ta","purchase_date":null,"items":[{"name":"Rice","quantity":1,"unit":"kg","category":"Carbohydrate","best_before_days":120,"confidence":0.98}],"warnings":[]}'
         response = SimpleNamespace(output_text=output)
         client = SimpleNamespace(responses=SimpleNamespace(create=lambda **_kwargs: response))
 
@@ -106,7 +106,7 @@ class ModelProviderTests(unittest.TestCase):
             result = parse_receipt(encoded, "image/jpeg", "ticket.jpg")
 
         self.assertEqual(result["merchant"], "Ta-Ta")
-        self.assertEqual(result["items"][0]["name"], "Arroz")
+        self.assertEqual(result["items"][0]["name"], "Rice")
 
 
 if __name__ == "__main__":

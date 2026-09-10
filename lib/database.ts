@@ -93,6 +93,10 @@ const statements = [
     content_type TEXT NOT NULL,
     created_at TEXT NOT NULL
   )`,
+  `CREATE TABLE IF NOT EXISTS app_meta (
+    key TEXT PRIMARY KEY,
+    value TEXT NOT NULL
+  )`,
   'CREATE INDEX IF NOT EXISTS idx_pantry_profile_status ON pantry_items(profile_id, status)',
   'CREATE INDEX IF NOT EXISTS idx_offers_store ON offers(supermarket)',
   'CREATE INDEX IF NOT EXISTS idx_history_profile_date ON meal_history(profile_id, cooked_at)',
@@ -197,6 +201,21 @@ export async function ensureDatabase() {
     db.prepare('DELETE FROM profiles WHERE id = ?').bind('lia-demo'),
   ]);
 
+  const englishSeed = await db.prepare('SELECT value FROM app_meta WHERE key = ?')
+    .bind('demo-language')
+    .first<{ value: string }>();
+  if (englishSeed?.value !== 'en-v1') {
+    await db.batch([
+      db.prepare('DELETE FROM meal_history WHERE profile_id = ?').bind(demoProfile.id),
+      db.prepare('DELETE FROM meal_entries WHERE profile_id = ?').bind(demoProfile.id),
+      db.prepare('DELETE FROM uploads WHERE profile_id = ?').bind(demoProfile.id),
+      db.prepare('DELETE FROM pantry_items WHERE profile_id = ?').bind(demoProfile.id),
+      db.prepare('DELETE FROM profile_goals WHERE profile_id = ?').bind(demoProfile.id),
+      db.prepare('DELETE FROM profiles WHERE id = ?').bind(demoProfile.id),
+      db.prepare('INSERT OR REPLACE INTO app_meta (key, value) VALUES (?, ?)').bind('demo-language', 'en-v1'),
+    ]);
+  }
+
   const existing = await db.prepare('SELECT id FROM profiles WHERE id = ?').bind(demoProfile.id).first();
   const referenceDate = new Date();
   const now = referenceDate.toISOString();
@@ -276,7 +295,7 @@ export async function getAppState(): Promise<AppState> {
     db.prepare('SELECT filename FROM uploads WHERE profile_id = ? ORDER BY created_at DESC LIMIT 1').bind(demoProfile.id).first<{ filename: string }>(),
   ]);
 
-  if (!profileRow) throw new Error('No se pudo cargar el perfil de demostracion.');
+  if (!profileRow) throw new Error('The demo profile could not be loaded.');
 
   const profile = rowToProfile(profileRow, goalRow);
   const meals = mealRows.results.map(rowToMealEntry);
@@ -379,7 +398,7 @@ export async function cookRecipe(recipeId: string) {
   await ensureDatabase();
   const db = env.DB;
   const row = await db.prepare('SELECT * FROM recipes WHERE id = ?').bind(recipeId).first<Record<string, unknown>>();
-  if (!row) throw new Error('No encontre esa receta.');
+  if (!row) throw new Error('I could not find that recipe.');
   const recipe = rowToRecipe(row);
   const ingredients = recipe.ingredients;
   const now = new Date();
@@ -396,7 +415,7 @@ export async function cookRecipe(recipeId: string) {
       && item.unit === ingredient.unit && item.quantity > 0);
     const available = batches.reduce((sum, item) => sum + item.quantity, 0);
     if (available + 0.0001 < ingredient.quantity) {
-      throw new Error(`No hay suficiente ${ingredient.label.toLowerCase()} para registrar esta comida.`);
+      throw new Error(`There is not enough ${ingredient.label.toLowerCase()} to log this meal.`);
     }
 
     let remaining = ingredient.quantity;
@@ -404,7 +423,7 @@ export async function cookRecipe(recipeId: string) {
       if (remaining <= 0) break;
       const consumed = Math.min(batch.quantity, remaining);
       const nextQuantity = Math.max(0, Math.round((batch.quantity - consumed) * 1000) / 1000);
-      const lowThreshold = batch.unit === 'unidades' ? 2 : 150;
+      const lowThreshold = batch.unit === 'units' ? 2 : 150;
       const daysLeft = Math.ceil((new Date(batch.bestBefore).getTime() - now.getTime()) / 86400000);
       const status = nextQuantity <= lowThreshold ? 'low' : daysLeft <= 3 ? 'soon' : 'ok';
       updates.push(db.prepare('UPDATE pantry_items SET quantity = ?, status = ? WHERE id = ? AND profile_id = ?')

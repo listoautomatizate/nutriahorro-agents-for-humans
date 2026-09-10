@@ -1,7 +1,7 @@
 [project]
 name = "nutriahorro-agent"
 version = "0.1.0"
-description = "Agente Strands de nutricion, despensa y ahorro."
+description = "Strands agent for nutrition, pantry management, and grocery savings."
 requires-python = ">=3.11,<3.15"
 dependencies = [
   "boto3>=1.43.72,<2.0.0",

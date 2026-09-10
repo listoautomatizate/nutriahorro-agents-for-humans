@@ -46,7 +46,7 @@ class DemoModel(Model):
     ) -> AsyncGenerator[dict[str, T | Any], None]:
         if False:
             yield {}
-        raise NotImplementedError("DemoModel no genera salidas estructuradas.")
+        raise NotImplementedError("DemoModel does not generate structured output.")
 
     async def stream(
         self,
@@ -68,7 +68,7 @@ class DemoModel(Model):
                 isinstance(recipes, list)
                 and recipes
                 and "register_cooked_meal" not in payloads
-                and _contains(latest_request, "receta", "comer", "cocinar", "rapido", "minuto", "proteina")
+                and _contains(latest_request, "recipe", "meal", "eat", "cook", "quick", "minute", "protein")
             ):
                 for event in _tool_call_events([(
                     "register_cooked_meal",
@@ -138,24 +138,24 @@ def _select_tools(message: str) -> list[tuple[str, dict[str, Any]]]:
         return [("register_cooked_meal", {"recipe_id": confirmation.group(1), "confirmed": True})]
 
     calls: list[tuple[str, dict[str, Any]]] = []
-    wants_recipe = _contains(message, "receta", "comer", "cocinar", "rapido", "minuto", "proteina")
+    wants_recipe = _contains(message, "recipe", "meal", "eat", "cook", "quick", "minute", "protein")
 
-    if wants_recipe or _contains(message, "perfil", "objetivo", "peso", "actividad"):
+    if wants_recipe or _contains(message, "profile", "goal", "weight", "activity"):
         calls.append(("get_user_profile", {}))
-    if _contains(message, "caloria", "proteina", "carbohidrato", "grasa", "macro", "progreso"):
+    if _contains(message, "calorie", "protein", "carb", "fat", "macro", "progress"):
         calls.append(("get_daily_progress", {}))
-    if wants_recipe or _contains(message, "despensa", "heladera", "vencer", "vence", "primero", "stock"):
+    if wants_recipe or _contains(message, "pantry", "fridge", "expire", "expiry", "first", "stock"):
         calls.append(("inspect_pantry", {"max_days_left": 4}))
     if wants_recipe:
-        minute_match = re.search(r"\b(\d{1,3})\s*(?:min|minuto|minutos)\b", message)
+        minute_match = re.search(r"\b(\d{1,3})\s*(?:min|minute|minutes)\b", message)
         max_minutes = min(180, max(5, int(minute_match.group(1)))) if minute_match else 30
-        minimum_protein = 35 if _contains(message, "alto en proteina", "alta en proteina", "mas proteina") else 0
+        minimum_protein = 35 if _contains(message, "high protein", "more protein", "most protein") else 0
         calls.append(("suggest_meals", {"max_minutes": max_minutes, "minimum_protein": minimum_protein}))
-    if _contains(message, "comprar", "compra", "oferta", "ahorro", "supermercado", "conviene"):
+    if _contains(message, "buy", "shop", "shopping", "deal", "offer", "save", "supermarket", "grocery"):
         transport = (
-            "motorcycle" if _contains(message, "moto", "motocicleta")
-            else "car" if _contains(message, "auto", "coche")
-            else "bicycle" if _contains(message, "bicicleta", "bici")
+            "motorcycle" if _contains(message, "motorcycle", "motorbike")
+            else "car" if _contains(message, "car", "drive")
+            else "bicycle" if _contains(message, "bicycle", "bike", "cycling")
             else "walking"
         )
         calls.append(("compare_nearby_shopping", {"transport": transport}))
@@ -223,23 +223,23 @@ def _summarize_tool_results(messages: Messages) -> str:
     priority = pantry.get("priority", []) if isinstance(pantry, dict) else []
     if priority:
         names = ", ".join(str(item["name"]) for item in priority[:3])
-        paragraphs.append(f"Usa primero {names}, porque son los alimentos mas proximos a vencer.")
+        paragraphs.append(f"Use {names} first because they are closest to expiry.")
 
     recipes = payloads.get("suggest_meals", [])
     if isinstance(recipes, list) and recipes:
         recipe = recipes[0]
         paragraphs.append(
-            f"La mejor opcion rapida es {recipe['name']}: {recipe.get('calories', 0)} kcal, "
-            f"{recipe.get('protein', 0)} g de proteina, {recipe.get('carbs', 0)} g de carbohidratos "
-            f"y {recipe.get('fat', 0)} g de grasas en {recipe.get('minutes', 0)} minutos."
+            f"The best quick option is {recipe['name']}: {recipe.get('calories', 0)} kcal, "
+            f"{recipe.get('protein', 0)} g of protein, {recipe.get('carbs', 0)} g of carbohydrates, "
+            f"and {recipe.get('fat', 0)} g of fat in {recipe.get('minutes', 0)} minutes."
         )
 
     shopping = payloads.get("compare_nearby_shopping", {})
     best = shopping.get("best") if isinstance(shopping, dict) else None
     if best:
         paragraphs.append(
-            f"Para la canasta de demostracion conviene {best['supermarket']}: costo efectivo "
-            f"${best['effective_cost']} UYU, incluyendo el traslado en {best['transport']}."
+            f"For the demo basket, {best['supermarket']} has the lowest effective cost: "
+            f"UYU {best['effective_cost']}, including round-trip travel by {best['transport']}."
         )
 
     progress = payloads.get("get_daily_progress", {})
@@ -247,29 +247,29 @@ def _summarize_tool_results(messages: Messages) -> str:
         consumed = progress["consumed"]
         remaining = progress.get("remaining", {})
         paragraphs.append(
-            f"Hoy llevas {consumed['calories']} kcal, {consumed['protein']} g de proteina, "
-            f"{consumed['carbs']} g de carbohidratos y {consumed['fat']} g de grasas. "
-            f"Te quedan {remaining.get('calories', 0)} kcal para entrar en tu rango orientativo."
+            f"Today you have logged {consumed['calories']} kcal, {consumed['protein']} g of protein, "
+            f"{consumed['carbs']} g of carbohydrates, and {consumed['fat']} g of fat. "
+            f"You need {remaining.get('calories', 0)} kcal to reach your general target range."
         )
 
     profile = payloads.get("get_user_profile", {})
     if isinstance(profile, dict) and profile:
         paragraphs.append(
-            f"Tu objetivo configurado es {profile.get('goal', 'sin definir')} con un rango orientativo "
-            f"de {profile.get('calorie_range', ['?', '?'])[0]} a "
+            f"Your configured goal is {profile.get('goal', 'not set')} with a general range "
+            f"of {profile.get('calorie_range', ['?', '?'])[0]} to "
             f"{profile.get('calorie_range', ['?', '?'])[1]} kcal."
         )
 
     registration = payloads.get("register_cooked_meal", {})
     if isinstance(registration, dict) and registration.get("confirmation_required"):
-        paragraphs.append("Puedo registrarla y actualizar tu ingesta y tu despensa, pero necesito tu confirmacion antes de hacerlo.")
+        paragraphs.append("I can log it and update both your nutrition progress and pantry, but I need your confirmation first.")
     elif isinstance(registration, dict) and registration.get("registered"):
         paragraphs.append(
-            f"Listo. Registre {registration.get('recipe', 'la comida')}; la aplicacion actualizara calorias, "
-            "proteina, carbohidratos, grasas y las cantidades de la despensa."
+            f"Done. I logged {registration.get('recipe', 'the meal')}; the app will update calories, "
+            "protein, carbohydrates, fat, and pantry quantities."
         )
 
-    return " ".join(paragraphs) or "Consulte las herramientas de nutrIAhorro, pero no encontre datos para responder."
+    return " ".join(paragraphs) or "I checked nutrIAhorro's tools, but I could not find enough data to answer."
 
 
 def _text_events(text: str) -> list[StreamEvent]:

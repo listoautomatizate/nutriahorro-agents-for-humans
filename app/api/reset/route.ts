@@ -5,6 +5,6 @@ export async function POST() {
     await resetDemoState();
     return Response.json(await getAppState());
   } catch (error) {
-    return Response.json({ error: error instanceof Error ? error.message : 'No se pudo restablecer la demostracion.' }, { status: 500 });
+    return Response.json({ error: error instanceof Error ? error.message : 'The demo could not be reset.' }, { status: 500 });
   }
 }

@@ -10,10 +10,10 @@ const addDays = (days: number) => {
 };
 
 const defaultShelfLife: Record<string, number> = {
-  Proteina: 3, Verdura: 5, Fruta: 5, Carbohidrato: 120, Grasa: 180, Otro: 14,
+  Protein: 3, Vegetable: 5, Fruit: 5, Carbohydrate: 120, Fat: 180, Other: 14,
 };
 const allowedCategories = Object.keys(defaultShelfLife);
-const allowedUnits = ['unidades', 'g', 'kg', 'ml', 'l'];
+const allowedUnits = ['units', 'g', 'kg', 'ml', 'l'];
 const allowedImageTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 
 function toBase64(buffer: ArrayBuffer) {
@@ -33,10 +33,10 @@ function normalizeParsedItems(value: unknown, source: string): PantryItem[] {
     const name = String(item.name || '').trim();
     const quantity = Number(item.quantity);
     if (!name || !Number.isFinite(quantity) || quantity <= 0) return [];
-    const proposedCategory = String(item.category || 'Otro');
-    const category = allowedCategories.includes(proposedCategory) ? proposedCategory : 'Otro';
-    const proposedUnit = String(item.unit || 'unidades').toLowerCase();
-    const unit = allowedUnits.includes(proposedUnit) ? proposedUnit : 'unidades';
+    const proposedCategory = String(item.category || 'Other');
+    const category = allowedCategories.includes(proposedCategory) ? proposedCategory : 'Other';
+    const proposedUnit = String(item.unit || 'units').toLowerCase();
+    const unit = allowedUnits.includes(proposedUnit) ? proposedUnit : 'units';
     const normalizedQuantity = unit === 'kg' || unit === 'l' ? quantity * 1000 : quantity;
     const normalizedUnit = unit === 'kg' ? 'g' : unit === 'l' ? 'ml' : unit;
     const shelfLife = Math.max(1, Math.min(365, Number(item.best_before_days) || defaultShelfLife[category] || 14));
@@ -59,13 +59,13 @@ export async function POST(request: Request) {
     const form = await request.formData();
     const file = form.get('receipt');
     if (!(file instanceof File) || file.size === 0) {
-      return Response.json({ error: 'Selecciona una foto o archivo del ticket.' }, { status: 400 });
+      return Response.json({ error: 'Select a receipt photo.' }, { status: 400 });
     }
     if (!allowedImageTypes.includes(file.type)) {
-      return Response.json({ error: 'Usa una foto JPG, PNG, WEBP o GIF.' }, { status: 400 });
+      return Response.json({ error: 'Use a JPG, PNG, WEBP, or GIF image.' }, { status: 400 });
     }
     if (file.size > 1024 * 1024) {
-      return Response.json({ error: 'La foto procesada no puede superar 1 MB.' }, { status: 400 });
+      return Response.json({ error: 'The processed image cannot exceed 1 MB.' }, { status: 400 });
     }
 
     const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '-');
@@ -91,7 +91,7 @@ export async function POST(request: Request) {
             return Response.json({
               parsedItems,
               mode: 'aws-agent',
-              message: `El agente reconocio ${parsedItems.length} productos. Revisalos antes de guardarlos.`,
+              message: `The agent recognized ${parsedItems.length} products. Review them before saving.`,
             });
           }
         }
@@ -103,25 +103,25 @@ export async function POST(request: Request) {
     return Response.json({
       parsedItems: createReceiptDemoItems(),
       mode: 'demo',
-      message: 'Use los datos de demostracion. Revisalos antes de guardarlos.',
+      message: 'Demo receipt data loaded. Review it before saving.',
     });
   } catch (error) {
-    return Response.json({ error: error instanceof Error ? error.message : 'No se pudo procesar el ticket.' }, { status: 500 });
+    return Response.json({ error: error instanceof Error ? error.message : 'The receipt could not be processed.' }, { status: 500 });
   }
 }
 
 export async function PUT(request: Request) {
   try {
     const body = await request.json() as { items?: unknown };
-    const items = normalizeParsedItems(body.items, 'Ticket confirmado');
-    if (!items.length) return Response.json({ error: 'No hay productos validos para guardar.' }, { status: 400 });
+    const items = normalizeParsedItems(body.items, 'Confirmed receipt');
+    if (!items.length) return Response.json({ error: 'There are no valid products to save.' }, { status: 400 });
 
     for (const item of items) await upsertPantryItem(item);
     return Response.json({
       state: await getAppState(),
-      message: `${items.length} productos confirmados y agregados a tu despensa.`,
+      message: `${items.length} products confirmed and added to your pantry.`,
     });
   } catch (error) {
-    return Response.json({ error: error instanceof Error ? error.message : 'No se pudieron guardar los productos.' }, { status: 500 });
+    return Response.json({ error: error instanceof Error ? error.message : 'The products could not be saved.' }, { status: 500 });
   }
 }

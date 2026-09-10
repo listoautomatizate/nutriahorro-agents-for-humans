@@ -7,7 +7,7 @@ export async function POST(request: Request) {
   try {
     const body = await request.json() as { message?: string; confirmedAction?: Record<string, unknown> };
     const originalMessage = body.message?.trim();
-    if (!originalMessage) return Response.json({ error: 'Escribi una pregunta.' }, { status: 400 });
+    if (!originalMessage) return Response.json({ error: 'Write a question.' }, { status: 400 });
     const message = originalMessage.toLowerCase();
     const state = await getAppState();
 
@@ -43,10 +43,10 @@ export async function POST(request: Request) {
 
     if (body.confirmedAction?.type === 'cook_recipe' && typeof body.confirmedAction.recipe_id === 'string') {
       const recipe = state.recipes.find((item) => item.id === body.confirmedAction?.recipe_id);
-      if (!recipe) return Response.json({ error: 'No encontre esa receta.' }, { status: 404 });
+      if (!recipe) return Response.json({ error: 'I could not find that recipe.' }, { status: 404 });
       await cookRecipe(recipe.id);
       return Response.json({
-        answer: `Listo. Registre ${recipe.name}. Actualice tus calorias y macros del dia y desconte las cantidades exactas de la despensa.`,
+        answer: `Done. I logged ${recipe.name}, updated today's calories and macros, and deducted the exact pantry quantities.`,
         mode: 'local-fallback',
         tools: ['register_cooked_meal'],
         actions: [{ type: 'cook_recipe', recipe_id: recipe.id, recipe_name: recipe.name, status: 'approved' }],
@@ -55,43 +55,43 @@ export async function POST(request: Request) {
     }
 
     const urgent = state.pantry.filter((item) => item.status === 'soon').map((item) => item.name.toLowerCase());
-    const wantsMeal = contains(message, ['receta', 'comer', 'cocinar', 'rapido', 'rápido', 'minuto']);
-    const wantsProtein = contains(message, ['alto en proteina', 'alto en proteína', 'alta en proteina', 'alta en proteína', 'mas proteina', 'más proteína']);
+    const wantsMeal = contains(message, ['recipe', 'meal', 'eat', 'cook', 'quick', 'minute']);
+    const wantsProtein = contains(message, ['high protein', 'more protein', 'most protein']);
 
-    let answer = `Hoy priorizaria ${urgent.join(', ')}. La receta de ${state.recipes[0].name.toLowerCase()} aprovecha esos alimentos y demora ${state.recipes[0].prepMinutes} minutos.`;
+    let answer = `Today I would prioritize ${urgent.join(', ')}. ${state.recipes[0].name} uses those foods and takes ${state.recipes[0].prepMinutes} minutes.`;
     let tools = ['inspect_pantry', 'suggest_meals', 'get_daily_progress'];
     let actions: Array<{ type: 'cook_recipe'; recipe_id: string; recipe_name: string; status: 'confirmation_required' }> = [];
-    if (contains(message, ['oferta', 'ahorro', 'comprar', 'supermercado'])) {
-      answer = 'Para esta compra conviene El Dorado: la canasta de prueba queda en $1.086 y esta a 900 metros. En modo caminando o bicicleta no agrego costo de traslado.';
+    if (contains(message, ['deal', 'offer', 'save', 'saving', 'buy', 'shop', 'supermarket', 'grocery'])) {
+      answer = 'El Dorado is the best option for this shop: the demo basket costs UYU 1,086 and the store is 900 meters away. Walking or cycling adds no travel cost.';
       tools = ['inspect_pantry', 'compare_nearby_shopping'];
-    } else if (contains(message, ['vencer', 'vence', 'urgente', 'primero'])) {
-      answer = `Usa primero ${urgent.join(', ')}. Guarda el pollo crudo sellado en el estante inferior y aplica primero en entrar, primero en salir dentro de cada zona segura.`;
+    } else if (contains(message, ['expire', 'expiry', 'urgent', 'first', 'use soon'])) {
+      answer = `Use ${urgent.join(', ')} first. Keep raw chicken sealed on the bottom shelf and follow first in, first out within each safe storage zone.`;
       tools = ['inspect_pantry'];
     } else if (wantsMeal) {
-      const requestedMinutes = Number(message.match(/\b(\d{1,3})\s*(?:min|minuto|minutos)\b/)?.[1] || state.profile.mealPrepMinutes);
+      const requestedMinutes = Number(message.match(/\b(\d{1,3})\s*(?:min|minute|minutes)\b/)?.[1] || state.profile.mealPrepMinutes);
       const candidates = state.recipes.filter((recipe) => recipe.prepMinutes <= requestedMinutes);
       const recipe = (wantsProtein
         ? [...candidates].sort((a, b) => b.protein - a.protein)[0]
         : [...candidates].sort((a, b) => a.prepMinutes - b.prepMinutes)[0]) || state.recipes[0];
-      answer = `Te recomiendo ${recipe.name}: demora ${recipe.prepMinutes} minutos, usa alimentos que ya tenes y aporta ${recipe.calories} kcal, ${recipe.protein} g de proteina, ${recipe.carbs} g de carbohidratos y ${recipe.fat} g de grasas. ${wantsProtein ? 'Es la opcion con mas proteina que entra en tu tiempo disponible.' : 'Es la opcion mas rapida que entra en tu tiempo disponible.'} Puedo registrarla, pero primero necesito tu confirmacion.`;
+      answer = `I recommend ${recipe.name}. It takes ${recipe.prepMinutes} minutes, uses food you already have, and provides ${recipe.calories} kcal, ${recipe.protein} g of protein, ${recipe.carbs} g of carbs, and ${recipe.fat} g of fat. ${wantsProtein ? 'It is the highest-protein option that fits your available time.' : 'It is the quickest option that fits your available time.'} I can log it, but I need your confirmation first.`;
       tools = ['get_user_profile', 'inspect_pantry', 'get_daily_progress', 'suggest_meals'];
       actions = [{ type: 'cook_recipe', recipe_id: recipe.id, recipe_name: recipe.name, status: 'confirmation_required' }];
-    } else if (contains(message, ['caloria', 'caloría', 'proteina', 'proteína', 'macro'])) {
+    } else if (contains(message, ['calorie', 'protein', 'carb', 'fat', 'macro', 'progress'])) {
       const { consumed, remaining } = state.dailyIntake;
       const calorieText = state.dailyIntake.calorieStatus === 'over'
-        ? `superaste el maximo por ${Math.abs(remaining.calories)} kcal`
+        ? `you are ${Math.abs(remaining.calories)} kcal over your maximum`
         : state.dailyIntake.calorieStatus === 'in-range'
-          ? 'ya estas dentro de tu rango calorico'
-          : `te faltan ${remaining.calories} kcal para entrar en tu rango`;
+          ? 'you are within your calorie range'
+          : `you need ${remaining.calories} kcal to reach your range`;
       const macroText = (value: number, nutrient: string) => value >= 0
-        ? `te quedan ${value} g de ${nutrient}`
-        : `superaste la meta de ${nutrient} por ${Math.abs(value)} g`;
-      answer = `Hoy llevas ${consumed.calories} kcal, ${consumed.protein} g de proteina, ${consumed.carbs} g de carbohidratos y ${consumed.fat} g de grasas; ${calorieText}. En tus metas orientativas, ${macroText(remaining.protein, 'proteina')}, ${macroText(remaining.carbs, 'carbohidratos')} y ${macroText(remaining.fat, 'grasas')}.`;
+        ? `you have ${value} g of ${nutrient} remaining`
+        : `you are ${Math.abs(value)} g over your ${nutrient} target`;
+      answer = `Today you have logged ${consumed.calories} kcal, ${consumed.protein} g of protein, ${consumed.carbs} g of carbs, and ${consumed.fat} g of fat; ${calorieText}. Against your general targets, ${macroText(remaining.protein, 'protein')}, ${macroText(remaining.carbs, 'carbs')}, and ${macroText(remaining.fat, 'fat')}.`;
       tools = ['get_daily_progress'];
     }
 
     return Response.json({ answer, mode: 'local-fallback', tools, actions });
   } catch (error) {
-    return Response.json({ error: error instanceof Error ? error.message : 'El agente no pudo responder.' }, { status: 500 });
+    return Response.json({ error: error instanceof Error ? error.message : 'The agent could not respond.' }, { status: 500 });
   }
 }

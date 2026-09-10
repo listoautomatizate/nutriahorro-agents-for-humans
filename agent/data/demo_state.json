@@ -1,6 +1,6 @@
 {
   "profile": {
-    "name": "Usuario Demo",
+    "name": "Demo User",
     "city": "Maldonado",
     "age": 32,
     "height_cm": 170,
@@ -11,28 +11,28 @@
     "exercise_days_per_week": 3,
     "exercise_minutes": 45,
     "meal_prep_minutes": 30,
-    "dietary_preference": "Sin preferencia",
-    "allergies": "Ninguna",
+    "dietary_preference": "No preference",
+    "allergies": "None",
     "dislikes": "",
     "calorie_range": [1825, 1925],
     "protein_grams": 130,
     "carbs_grams": 208,
     "fat_grams": 58,
-    "goal": "perder grasa y estar en forma",
+    "goal": "lose fat and improve fitness",
     "transport": "walking"
   },
   "pantry": [
-    {"name": "Pechuga de pollo", "quantity": 800, "unit": "g", "days_left": 2},
-    {"name": "Arroz", "quantity": 1000, "unit": "g", "days_left": 180},
-    {"name": "Huevos", "quantity": 12, "unit": "unidades", "days_left": 20},
-    {"name": "Palta", "quantity": 3, "unit": "unidades", "days_left": 3},
-    {"name": "Tomate", "quantity": 1000, "unit": "g", "days_left": 2},
-    {"name": "Aceite de oliva", "quantity": 750, "unit": "ml", "days_left": 240}
+    {"name": "Chicken breast", "quantity": 800, "unit": "g", "days_left": 2},
+    {"name": "Rice", "quantity": 1000, "unit": "g", "days_left": 180},
+    {"name": "Eggs", "quantity": 12, "unit": "units", "days_left": 20},
+    {"name": "Avocado", "quantity": 3, "unit": "units", "days_left": 3},
+    {"name": "Tomato", "quantity": 1000, "unit": "g", "days_left": 2},
+    {"name": "Olive oil", "quantity": 750, "unit": "ml", "days_left": 240}
   ],
   "recipes": [
-    {"id": "recipe-chicken-rice", "name": "Pollo con arroz, tomate y palta", "minutes": 25, "calories": 532, "protein": 46, "carbs": 48, "fat": 17, "uses": ["Pechuga de pollo", "Arroz", "Tomate", "Palta", "Aceite de oliva"], "ingredients": [{"pantryName": "Pechuga de pollo", "quantity": 180, "unit": "g"}, {"pantryName": "Arroz", "quantity": 70, "unit": "g"}, {"pantryName": "Tomate", "quantity": 180, "unit": "g"}, {"pantryName": "Palta", "quantity": 0.5, "unit": "unidades"}, {"pantryName": "Aceite de oliva", "quantity": 8, "unit": "ml"}]},
-    {"id": "recipe-omelette", "name": "Omelette cremoso con tomate", "minutes": 15, "calories": 408, "protein": 31, "carbs": 13, "fat": 25, "uses": ["Huevos", "Tomate", "Palta", "Aceite de oliva"], "ingredients": [{"pantryName": "Huevos", "quantity": 3, "unit": "unidades"}, {"pantryName": "Tomate", "quantity": 160, "unit": "g"}, {"pantryName": "Palta", "quantity": 0.5, "unit": "unidades"}, {"pantryName": "Aceite de oliva", "quantity": 5, "unit": "ml"}]},
-    {"id": "recipe-bowl", "name": "Bowl tibio de pollo y palta", "minutes": 20, "calories": 487, "protein": 43, "carbs": 39, "fat": 18, "uses": ["Pechuga de pollo", "Arroz", "Tomate", "Palta"], "ingredients": [{"pantryName": "Pechuga de pollo", "quantity": 170, "unit": "g"}, {"pantryName": "Arroz", "quantity": 55, "unit": "g"}, {"pantryName": "Tomate", "quantity": 120, "unit": "g"}, {"pantryName": "Palta", "quantity": 0.5, "unit": "unidades"}]}
+    {"id": "recipe-chicken-rice", "name": "Chicken with rice, tomato, and avocado", "minutes": 25, "calories": 532, "protein": 46, "carbs": 48, "fat": 17, "uses": ["Chicken breast", "Rice", "Tomato", "Avocado", "Olive oil"], "ingredients": [{"pantryName": "Chicken breast", "quantity": 180, "unit": "g"}, {"pantryName": "Rice", "quantity": 70, "unit": "g"}, {"pantryName": "Tomato", "quantity": 180, "unit": "g"}, {"pantryName": "Avocado", "quantity": 0.5, "unit": "units"}, {"pantryName": "Olive oil", "quantity": 8, "unit": "ml"}]},
+    {"id": "recipe-omelette", "name": "Creamy tomato omelet", "minutes": 15, "calories": 408, "protein": 31, "carbs": 13, "fat": 25, "uses": ["Eggs", "Tomato", "Avocado", "Olive oil"], "ingredients": [{"pantryName": "Eggs", "quantity": 3, "unit": "units"}, {"pantryName": "Tomato", "quantity": 160, "unit": "g"}, {"pantryName": "Avocado", "quantity": 0.5, "unit": "units"}, {"pantryName": "Olive oil", "quantity": 5, "unit": "ml"}]},
+    {"id": "recipe-bowl", "name": "Warm chicken and avocado bowl", "minutes": 20, "calories": 487, "protein": 43, "carbs": 39, "fat": 18, "uses": ["Chicken breast", "Rice", "Tomato", "Avocado"], "ingredients": [{"pantryName": "Chicken breast", "quantity": 170, "unit": "g"}, {"pantryName": "Rice", "quantity": 55, "unit": "g"}, {"pantryName": "Tomato", "quantity": 120, "unit": "g"}, {"pantryName": "Avocado", "quantity": 0.5, "unit": "units"}]}
   ],
   "shopping": [
     {"supermarket": "El Dorado", "distance_km": 0.9, "basket_price": 1086},

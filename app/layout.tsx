@@ -2,15 +2,15 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'nutrIAhorro | Tu agente de alimentacion inteligente',
+  title: 'nutrIAhorro | Your everyday food intelligence agent',
   description:
-    'Organiza tu despensa, come mejor y encuentra la compra que realmente te conviene.',
+    'Organize your pantry, eat better, and find the shopping option that truly costs less.',
   icons: { icon: '/favicon.svg' },
   openGraph: {
     title: 'nutrIAhorro',
-    description: 'Come mejor, desperdicia menos y compra con el costo real del traslado.',
-    images: [{ url: '/og-nutriahorro.png', width: 1536, height: 1024, alt: 'Alimentos frescos, ticket y aplicacion nutrIAhorro' }],
-    locale: 'es_UY',
+    description: 'Eat better, waste less, and shop using the true cost of travel.',
+    images: [{ url: '/og-nutriahorro.png', width: 1536, height: 1024, alt: 'Fresh food, grocery receipt, and the nutrIAhorro app' }],
+    locale: 'en_US',
     type: 'website',
   },
 };
@@ -21,7 +21,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es">
+    <html lang="en">
       <body>{children}</body>
     </html>
   );
